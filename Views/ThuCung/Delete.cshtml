@@ -1,0 +1,14 @@
+﻿@model ThuCung
+@{
+    ViewData["Title"] = "Xóa thú cưng";
+}
+<div class="alert alert-warning">
+    <h1 class="h4">Xác nhận xóa</h1>
+    <p>Bạn có chắc muốn xóa thú cưng <strong>@Model.HoTen</strong>?</p>
+    <p>Nếu thú cưng đã có lịch sử phân công/lịch phục vụ thì hệ thống sẽ không cho xóa.</p>
+</div>
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="MaThuCung" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>

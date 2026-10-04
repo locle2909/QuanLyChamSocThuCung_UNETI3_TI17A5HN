@@ -1,0 +1,36 @@
+﻿@model ThuCung
+@{
+    ViewData["Title"] = "Chi tiết thú cưng";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3">Chi tiết thú cưng</h1>
+    <div><a asp-action="Edit" asp-route-id="@Model.MaThuCung" class="btn btn-primary">Sửa</a> <a asp-action="Index" class="btn btn-secondary">Quay lại</a></div>
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4"><strong>Mã:</strong> @Model.MaThuCung</div>
+            <div class="col-md-4"><strong>Mã tài khoản:</strong> @Model.MaTaiKhoan</div>
+            <div class="col-md-4"><strong>Họ tên:</strong> @Model.HoTen</div>
+            <div class="col-md-4"><strong>Ngày sinh:</strong> @Model.NgaySinh.ToString("dd/MM/yyyy")</div>
+            <div class="col-md-4"><strong>Giới tính:</strong> @Model.GioiTinh</div>
+            <div class="col-md-4"><strong>Tuổi:</strong> @Model.Tuoi</div>
+            <div class="col-md-4"><strong>SĐT:</strong> @Model.SoDienThoai</div>
+            <div class="col-md-4"><strong>Email:</strong> @Model.Email</div>
+            <div class="col-md-4"><strong>Giống/loài:</strong> @Model.GiongLoai</div>
+            <div class="col-md-12"><strong>Địa chỉ:</strong> @Model.DiaChi</div>
+            <div class="col-md-12"><strong>Ghi chú sức khỏe:</strong> @Model.GhiChuSucKhoe</div>
+            <div class="col-md-4"><strong>Trạng thái:</strong> @Model.TrangThai</div>
+        </div>
+    </div>
+</div>
+<h2 class="h5">Thông tin chăm sóc</h2>
+<table class="table table-bordered">
+    <thead><tr><th>Dịch vụ</th><th>Giống/loài</th><th>Tuổi</th><th>Ghi chú</th><th>Trạng thái</th></tr></thead>
+    <tbody>
+    @foreach (var x in Model.ChuyenMons)
+    {
+        <tr><td>@x.LoaiDichVu?.TenLoaiDichVu</td><td>@x.GiongLoaiChuyenMon</td><td>@x.TuoiMon</td><td>@x.GhiChu</td><td>@x.TrangThai</td></tr>
+    }
+    </tbody>
+</table>

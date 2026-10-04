@@ -1,0 +1,16 @@
+﻿@model ThuCung
+@{
+    ViewData["Title"] = "Sửa thú cưng";
+}
+<h1 class="h3 mb-3">Sửa thú cưng #@Model.MaThuCung</h1>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="MaThuCung" />
+    <partial name="_Form" model="Model" />
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Cập nhật</button>
+        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,69 @@
+﻿@model ChuyenMonIndexViewModel
+@{
+    ViewData["Title"] = "Thông tin chăm sóc";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Thông tin chăm sóc</h1>
+        <div class="text-muted">Tổng số: @Model.TotalItems bản ghi</div>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Thêm thông tin chăm sóc</a>
+</div>
+<form method="get" class="card card-body mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="keyword" value="@Model.Keyword" class="form-control" placeholder="Tên thú cưng, loại dịch vụ hoặc giống/loài" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Trạng thái</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="Hiệu lực" selected="@(Model.TrangThai == "Hiệu lực" ? "selected" : null)">Hiệu lực</option>
+                <option value="Hết hiệu lực" selected="@(Model.TrangThai == "Hết hiệu lực" ? "selected" : null)">Hết hiệu lực</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </div>
+</form>
+<table class="table table-bordered table-hover bg-white align-middle">
+    <thead class="table-light">
+        <tr><th>Mã</th><th>Thú cưng</th><th>Loại dịch vụ</th><th>Giống/loài</th><th>Tuổi</th><th>Ghi chú</th><th>Trạng thái</th><th></th></tr>
+    </thead>
+    <tbody>
+    @if (Model.Items.Count == 0)
+    {
+        <tr><td colspan="8" class="text-center py-4">Không có dữ liệu.</td></tr>
+    }
+    else
+    {
+        foreach (var x in Model.Items)
+        {
+            <tr>
+                <td>@x.MaChuyenMon</td>
+                <td>@x.ThuCung?.HoTen</td>
+                <td>@x.LoaiDichVu?.TenLoaiDichVu</td>
+                <td>@x.GiongLoaiChuyenMon</td>
+                <td>@x.TuoiMon</td>
+                <td>@x.GhiChu</td>
+                <td><span class="badge @(x.TrangThai == "Hiệu lực" ? "text-bg-success" : "text-bg-secondary")">@x.TrangThai</span></td>
+                <td class="text-nowrap"><a asp-action="Details" asp-route-id="@x.MaChuyenMon">Chi tiết</a> | <a asp-action="Edit" asp-route-id="@x.MaChuyenMon">Sửa</a> | <a class="text-danger" asp-action="Delete" asp-route-id="@x.MaChuyenMon">Xóa</a></td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+@if (Model.TotalPages > 1)
+{
+    <nav><ul class="pagination justify-content-center">
+        <li class="page-item @(Model.Page <= 1 ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-trangThai="@Model.TrangThai" asp-route-page="@(Model.Page - 1)">Trước</a></li>
+        @for (var i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-trangThai="@Model.TrangThai" asp-route-page="@i">@i</a></li>
+        }
+        <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-trangThai="@Model.TrangThai" asp-route-page="@(Model.Page + 1)">Sau</a></li>
+    </ul></nav>
+}
