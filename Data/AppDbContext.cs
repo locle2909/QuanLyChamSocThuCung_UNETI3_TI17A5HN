@@ -24,9 +24,9 @@ public class AppDbContext : DbContext
     // public DbSet<LichHen> LichHen { get; set; }
 
     // ===== SV4: PhanCongNhanVien, CaDichVu, KetQuaDichVu =====
-    // public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
-    // public DbSet<CaDichVu> CaDichVu { get; set; }
-    // public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
+     public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
+     public DbSet<CaDichVu> CaDichVu { get; set; }
+     public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
 
     // ===== SV5: ThanhToan =====
     // public DbSet<ThanhToan> ThanhToan { get; set; }
