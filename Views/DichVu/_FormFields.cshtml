@@ -1,0 +1,39 @@
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.DichVu
+@{
+    var groups = (IEnumerable<string>)ViewBag.NhomDichVu;
+    var statuses = (IEnumerable<string>)ViewBag.TrangThaiDichVu;
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="mb-3">
+    <label asp-for="TenDichVu" class="form-label"></label>
+    <input asp-for="TenDichVu" class="form-control" />
+    <span asp-validation-for="TenDichVu" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="MoTa" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="Gia" class="form-label"></label>
+        <input asp-for="Gia" class="form-control" type="number" min="0" step="1000" />
+        <span asp-validation-for="Gia" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="NhomDichVu" class="form-label"></label>
+        <select asp-for="NhomDichVu" class="form-select">
+            <option value="">Chọn nhóm</option>
+            @foreach (var group in groups) { <option value="@group">@group</option> }
+        </select>
+        <span asp-validation-for="NhomDichVu" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="TrangThai" class="form-label"></label>
+        <select asp-for="TrangThai" class="form-select">
+            @foreach (var status in statuses) { <option value="@status">@status</option> }
+        </select>
+        <span asp-validation-for="TrangThai" class="text-danger"></span>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels.GoiDichVuFormViewModel
+@{
+    var statuses = (IEnumerable<string>)ViewBag.TrangThaiDichVu;
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row">
+    <div class="col-md-8 mb-3">
+        <label asp-for="TenGoi" class="form-label"></label>
+        <input asp-for="TenGoi" class="form-control" />
+        <span asp-validation-for="TenGoi" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 mb-3">
+        <label asp-for="TrangThai" class="form-label"></label>
+        <select asp-for="TrangThai" class="form-select">
+            @foreach (var status in statuses) { <option value="@status">@status</option> }
+        </select>
+        <span asp-validation-for="TrangThai" class="text-danger"></span>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="MoTa" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="GiaGoi" class="form-label"></label>
+        <input asp-for="GiaGoi" class="form-control" type="number" min="0" step="1000" />
+        <span asp-validation-for="GiaGoi" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="GiaKhuyenMai" class="form-label"></label>
+        <input asp-for="GiaKhuyenMai" class="form-control" type="number" min="0" step="1000" />
+        <span asp-validation-for="GiaKhuyenMai" class="text-danger"></span>
+    </div>
+</div>
+<h2 class="h5 mt-3">Dịch vụ trong gói</h2>
+<span asp-validation-for="DichVus" class="text-danger"></span>
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr><th>Chọn</th><th>Dịch vụ</th><th class="text-end">Giá lẻ</th><th>Số lượng</th></tr>
+        </thead>
+        <tbody>
+            @for (var index = 0; index < Model.DichVus.Count; index++)
+            {
+                <tr>
+                    <td>
+                        <input asp-for="DichVus[index].Chon" class="form-check-input" />
+                        <input asp-for="DichVus[index].MaDichVu" type="hidden" />
+                    </td>
+                    <td>@Model.DichVus[index].TenDichVu</td>
+                    <td class="text-end">@Model.DichVus[index].Gia.ToString("N0") đ</td>
+                    <td>
+                        <input asp-for="DichVus[index].SoLuong" class="form-control form-control-sm" type="number" min="1" />
+                        <span asp-validation-for="DichVus[index].SoLuong" class="text-danger"></span>
+                    </td>
+                </tr>
+            }
+            @if (Model.DichVus.Count == 0)
+            {
+                <tr><td colspan="4" class="text-muted">Chưa có dịch vụ để chọn. Hãy tạo dịch vụ trước.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

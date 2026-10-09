@@ -1,0 +1,64 @@
+@using Microsoft.AspNetCore.Http
+@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.GoiDichVu>
+@inject IHttpContextAccessor Accessor
+@{
+    ViewData["Title"] = "Gói dịch vụ";
+    var isAdmin = Accessor.HttpContext?.Session.GetString(QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.HangSo.SessionKey.VaiTro)
+        == QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.HangSo.VaiTro.Admin;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Gói dịch vụ</h1>
+    @if (isAdmin) { <a asp-action="Create" class="btn btn-primary">Thêm gói</a> }
+</div>
+@if (TempData["ThongBao"] is string thongBao)
+{
+    <div class="alert alert-success" role="status">@thongBao</div>
+}
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Gói</th>
+                <th>Dịch vụ đi kèm</th>
+                <th class="text-end">Giá gói</th>
+                <th class="text-end">Giá khuyến mãi</th>
+                <th>Trạng thái</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var goi in Model)
+            {
+                <tr>
+                    <td>
+                        <strong>@goi.TenGoi</strong>
+                        @if (!string.IsNullOrWhiteSpace(goi.MoTa)) { <div class="small text-muted">@goi.MoTa</div> }
+                    </td>
+                    <td>
+                        @foreach (var chiTiet in goi.ChiTietGoiDichVus)
+                        {
+                            <div>@(chiTiet.DichVu?.TenDichVu ?? "Dịch vụ đã ngừng") <span class="text-muted">× @chiTiet.SoLuong</span></div>
+                        }
+                    </td>
+                    <td class="text-end">@goi.GiaGoi.ToString("N0") đ</td>
+                    <td class="text-end">@(goi.GiaKhuyenMai?.ToString("N0") is string gia ? $"{gia} đ" : "—")</td>
+                    <td>@goi.TrangThai</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Edit" asp-route-id="@goi.MaGoi" class="btn btn-sm btn-outline-primary">Sửa</a>
+                        @if (goi.TrangThai != QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.HangSo.TrangThaiDichVu.NgungPhucVu)
+                        {
+                            <form asp-action="Ngung" asp-route-id="@goi.MaGoi" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Ngừng</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="6" class="text-center text-muted py-4">Chưa có gói dịch vụ.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
