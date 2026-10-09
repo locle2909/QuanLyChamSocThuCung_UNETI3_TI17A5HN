@@ -69,4 +69,23 @@ public static class HangSo
         public const string DangThucHien = "Đang thực hiện";
         public const string HoanThanh = "Hoàn thành";
     }
+
+    public static class TrangThaiChuyenMon
+    {
+        public const string HieuLuc = "Hiệu lực";
+        public const string HetHieuLuc = "Hết hiệu lực";
+    }
+
+    public static class TrangThaiPhanCong
+    {
+        public const string HieuLuc = "Hiệu lực";
+        public const string DaHuy = "Đã hủy";
+    }
+
+    public static class PhuongThucThanhToan
+    {
+        public const string TienMat = "Tiền mặt";
+        public const string ChuyenKhoan = "Chuyển khoản";
+        public const string The = "Thẻ";
+    }
 }
