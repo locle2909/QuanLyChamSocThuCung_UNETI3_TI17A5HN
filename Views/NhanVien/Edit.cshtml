@@ -1,0 +1,43 @@
+﻿
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.NhanVien
+
+@{
+    ViewData["Title"] = "Sửa nhân viên";
+}
+
+<h2>Sửa nhân viên</h2>
+
+<form asp-action="Edit" asp-route-id="@Model.MaNhanVien" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="MaNhanVien" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="HoTen" class="form-label">Họ tên</label>
+        <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="SoDienThoai" class="form-label">Số điện thoại</label>
+        <input asp-for="SoDienThoai" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ChucVu" class="form-label">Chức vụ</label>
+        <input asp-for="ChucVu" class="form-control" />
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="TrangThai" class="form-check-input" />
+        <label asp-for="TrangThai" class="form-check-label">Đang hoạt động</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

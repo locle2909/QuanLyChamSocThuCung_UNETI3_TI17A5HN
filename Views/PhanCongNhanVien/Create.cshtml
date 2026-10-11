@@ -1,0 +1,60 @@
+﻿
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.PhanCongNhanVien
+
+@{
+    ViewData["Title"] = "Phân công nhân viên";
+    var nhanViens =
+        ViewBag.NhanViens as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.NhanVien>
+        ?? new();
+    var caDichVus =
+        ViewBag.CaDichVus as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
+        ?? new();
+}
+
+<h2>Phân công nhân viên vào ca</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="MaNhanVien" class="form-label">Nhân viên</label>
+        <select asp-for="MaNhanVien" class="form-select">
+            <option value="">-- Chọn nhân viên --</option>
+            @foreach (var nv in nhanViens)
+            {
+                <option value="@nv.MaNhanVien">
+                    @nv.HoTen - Mã @nv.MaNhanVien
+                </option>
+            }
+        </select>
+        <span asp-validation-for="MaNhanVien" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaCaDichVu" class="form-label">Ca dịch vụ</label>
+        <select asp-for="MaCaDichVu" class="form-select">
+            <option value="">-- Chọn ca dịch vụ --</option>
+            @foreach (var ca in caDichVus)
+            {
+                <option value="@ca.MaCaDichVu">
+                    Ca @ca.MaCaDichVu |
+                    Dịch vụ @ca.MaDichVu |
+                    Thú cưng @ca.MaThuCung |
+                    @ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")
+                    -
+                    @ca.ThoiGianKetThuc.ToString("HH:mm")
+                </option>
+            }
+        </select>
+        <span asp-validation-for="MaCaDichVu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+        <textarea asp-for="GhiChu" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Xác nhận phân công</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

@@ -1,0 +1,58 @@
+﻿
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.KetQuaDichVu
+
+@{
+    ViewData["Title"] = "Ghi nhận kết quả dịch vụ";
+    var caDichVus =
+        ViewBag.CaDichVus as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
+        ?? new();
+}
+
+<h2>Ghi nhận kết quả dịch vụ</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="MaCaDichVu" class="form-label">Ca dịch vụ</label>
+        <select asp-for="MaCaDichVu" class="form-select">
+            <option value="">-- Chọn ca --</option>
+            @foreach (var ca in caDichVus)
+            {
+                <option value="@ca.MaCaDichVu">
+                    Ca @ca.MaCaDichVu -
+                    @ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")
+                </option>
+            }
+        </select>
+        <span asp-validation-for="MaCaDichVu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaKhachHang" class="form-label">Mã khách hàng</label>
+        <input asp-for="MaKhachHang" type="number" min="1"
+               class="form-control" />
+        <span asp-validation-for="MaKhachHang" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="TrangThaiKetQuaDichVu" class="form-label">
+            Trạng thái kết quả
+        </label>
+        <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
+            <option value="Chờ thực hiện">Chờ thực hiện</option>
+            <option value="Đang thực hiện">Đang thực hiện</option>
+            <option value="Hoàn thành">Hoàn thành</option>
+            <option value="Đã hủy">Đã hủy</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">Ghi chú kết quả</label>
+        <textarea asp-for="GhiChu" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu kết quả</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

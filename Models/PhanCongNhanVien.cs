@@ -7,11 +7,11 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
         [Key]
         public int MaPhanCong { get; set; }
 
-        public int MaDichVu { get; set; }
+        public int MaNhanVien { get; set; }
 
-        public int MaThuCung { get; set; }
+        public int MaCaDichVu { get; set; }
 
-        public DateTime NgayPhanCong { get; set; }
+        public DateTime NgayPhanCong { get; set; } = DateTime.Now;
 
         public string TrangThai { get; set; } = "Đã phân công";
 
