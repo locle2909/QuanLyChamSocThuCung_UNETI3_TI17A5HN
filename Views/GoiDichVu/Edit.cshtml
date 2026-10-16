@@ -1,0 +1,16 @@
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels.GoiDichVuFormViewModel
+@{
+    ViewData["Title"] = "Sửa gói dịch vụ";
+}
+
+<h1 class="h3 mb-3">Sửa gói dịch vụ</h1>
+<form asp-action="Edit" asp-route-id="@Model.MaGoi" method="post">
+    <input asp-for="MaGoi" type="hidden" />
+    <partial name="_Form" model="Model" />
+    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

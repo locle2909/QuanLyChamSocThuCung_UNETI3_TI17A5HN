@@ -18,10 +18,12 @@ public class AppDbContext : DbContext
     // public DbSet<ThuCung> ThuCung { get; set; }
     // public DbSet<ChuyenMonThuCung> ChuyenMonThuCung { get; set; }
 
-    // ===== SV3: KhachHang, DichVu, LichHen =====
+    // ===== SV3: KhachHang, DichVu, GoiDichVu, LichHen =====
     // public DbSet<KhachHang> KhachHang { get; set; }
-    // public DbSet<DichVu> DichVu { get; set; }
     // public DbSet<LichHen> LichHen { get; set; }
+    public DbSet<DichVu> DichVus { get; set; }
+    public DbSet<GoiDichVu> GoiDichVus { get; set; }
+    public DbSet<ChiTietGoiDichVu> ChiTietGoiDichVus { get; set; }
 
     // ===== SV4: NhanVien, ChuyenMonNhanVien, PhanCongNhanVien, CaDichVu, KetQuaDichVu =====
     public DbSet<NhanVien> NhanVien { get; set; }
@@ -43,17 +45,4 @@ public class AppDbContext : DbContext
 
         // ----- SV1 -----
         modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
-        modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
-
-        // ----- SV2 -----
-
-        // ----- SV3 -----
-
-        // ----- SV4 -----
-        modelBuilder.Entity<ChuyenMonNhanVien>()
-            .HasIndex(x => new { x.MaNhanVien, x.TenChuyenMon })
-            .IsUnique();
-
-        // ----- SV5 -----
-    }
-}
+        modelBuilder.Entity<LoaiDichVu>().HasIndex(l
