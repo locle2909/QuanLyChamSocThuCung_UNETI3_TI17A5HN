@@ -1,8 +1,88 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Trang chủ sau đăng nhập: lời chào, số liệu tổng quan (Admin), lối tắt chức năng. *@
+@{
+    ViewData["Title"] = "Trang chủ";
+    var vaiTro = ViewBag.VaiTro as string;
+    var hoTen = ViewBag.HoTen as string;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .pc-hero { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color: #fff; border-radius: 1rem; padding: 2rem 2.25rem; }
+    .pc-hero h2 { font-weight: 600; margin-bottom: .25rem; }
+    .pc-role { display: inline-block; background: rgba(255,255,255,.2); border-radius: 2rem; padding: .2rem .85rem; font-size: .85rem; margin-top: .6rem; }
+    .pc-stat { background: #fff; border-radius: .9rem; padding: 1.1rem 1.25rem; box-shadow: 0 1px 3px rgba(15,23,42,.08); height: 100%; border-left: 4px solid #14b8a6; }
+    .pc-stat-label { color: #64748b; font-size: .85rem; }
+    .pc-stat-value { font-size: 1.9rem; font-weight: 700; color: #0f172a; line-height: 1.25; }
+    .pc-card { background: #fff; border: 0; border-radius: .9rem; box-shadow: 0 1px 3px rgba(15,23,42,.08); height: 100%; }
+    .pc-section { font-size: 1.05rem; font-weight: 600; color: #0f172a; margin: 1.75rem 0 .75rem; }
+    .btn-pc { background: #0f766e; border-color: #0f766e; color: #fff; border-radius: .5rem; }
+    .btn-pc:hover { background: #115e59; border-color: #115e59; color: #fff; }
+</style>
+
+<div class="pc-hero mb-4">
+    <h2>Xin chào, @hoTen</h2>
+    <div>Hôm nay là @(DateTime.Now.ToString("dd/MM/yyyy")). Chúc bạn một ngày làm việc hiệu quả.</div>
+    <span class="pc-role">@HangSo.VaiTro.Ten(vaiTro)</span>
 </div>
+
+@if (vaiTro == HangSo.VaiTro.Admin)
+{
+    <div class="row g-3">
+        <div class="col-6 col-lg-3">
+            <div class="pc-stat">
+                <div class="pc-stat-label">Tổng tài khoản</div>
+                <div class="pc-stat-value">@ViewBag.TongTaiKhoan</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="pc-stat">
+                <div class="pc-stat-label">Tài khoản hoạt động</div>
+                <div class="pc-stat-value">@ViewBag.TaiKhoanHoatDong</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="pc-stat">
+                <div class="pc-stat-label">Loại dịch vụ</div>
+                <div class="pc-stat-value">@ViewBag.TongLoaiDichVu</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="pc-stat">
+                <div class="pc-stat-label">Loại dịch vụ đang bật</div>
+                <div class="pc-stat-value">@ViewBag.LoaiDichVuDangBat</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pc-section">Truy cập nhanh</div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card pc-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-semibold">Quản lý tài khoản</h5>
+                    <p class="card-text text-muted">Thêm, sửa, khóa/mở khóa tài khoản người dùng.</p>
+                    <a asp-controller="TaiKhoan" asp-action="Index" class="btn btn-pc">Mở trang</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card pc-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-semibold">Quản lý loại dịch vụ</h5>
+                    <p class="card-text text-muted">Quản lý các loại dịch vụ theo nhóm, bật/tắt hiển thị.</p>
+                    <a asp-controller="LoaiDichVu" asp-action="Index" class="btn btn-pc">Mở trang</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card pc-card">
+        <div class="card-body p-4">
+            <h5 class="card-title fw-semibold">Bắt đầu làm việc</h5>
+            <p class="card-text text-muted mb-0">Hãy chọn chức năng ở thanh menu phía trên để tiếp tục.</p>
+        </div>
+    </div>
+}

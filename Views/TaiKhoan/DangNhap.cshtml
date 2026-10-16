@@ -1,39 +1,239 @@
 ﻿@* Họ và tên: Lê Hữu Lộc
    Mã sinh viên: 23103100283
-   Nội dung thực hiện: Trang đăng nhập. *@
+   Nội dung thực hiện: Trang đăng nhập (giao diện riêng, không dùng layout chung). *@
 @model QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels.DangNhapViewModel
 @{
-    ViewData["Title"] = "Đăng nhập";
+    Layout = null;
 }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập - PetCare</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+            body {
+                min-height: 100vh;
+                margin: 0;
+                font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+                background: #fff;
+            }
 
-<div class="row justify-content-center mt-4">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h3 class="text-center mb-4">Đăng nhập</h3>
+            .login-wrap {
+                min-height: 100vh;
+            }
+
+            .login-brand {
+                flex: 1 1 50%;
+                background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+                color: #fff;
+                padding: 4rem;
+            }
+
+            .login-brand-inner {
+                max-width: 420px;
+                margin: 0 auto;
+            }
+
+            .login-brand h1 {
+                font-size: 2.4rem;
+                font-weight: 700;
+                margin: 1rem 0 .25rem;
+            }
+
+            .brand-sub {
+                font-size: 1.1rem;
+                opacity: .9;
+                margin-bottom: 2rem;
+            }
+
+            .brand-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+                .brand-list li {
+                    padding: .55rem 0 .55rem 1.9rem;
+                    position: relative;
+                    opacity: .95;
+                }
+
+                    .brand-list li::before {
+                        content: "✓";
+                        position: absolute;
+                        left: 0;
+                        top: .5rem;
+                        width: 1.3rem;
+                        height: 1.3rem;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,.25);
+                        font-size: .8rem;
+                        text-align: center;
+                        line-height: 1.3rem;
+                    }
+
+            .login-form-side {
+                flex: 1 1 50%;
+                padding: 2rem;
+                background: #f8fafc;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 400px;
+                background: #fff;
+                border-radius: 1rem;
+                padding: 2.25rem 2rem;
+                box-shadow: 0 10px 30px rgba(15,23,42,.08);
+            }
+
+                .login-card h2 {
+                    font-size: 1.6rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+
+            .mobile-logo {
+                color: #0f766e;
+                font-weight: 700;
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-label {
+                font-weight: 500;
+                color: #334155;
+                font-size: .9rem;
+            }
+
+            .form-control {
+                padding: .65rem .85rem;
+                border-radius: .5rem;
+            }
+
+                .form-control:focus {
+                    border-color: #14b8a6;
+                    box-shadow: 0 0 0 .2rem rgba(20,184,166,.2);
+                }
+
+            .input-validation-error {
+                border-color: #dc3545;
+            }
+
+            .btn-pc {
+                background: #0f766e;
+                border-color: #0f766e;
+                color: #fff;
+                padding: .7rem;
+                border-radius: .5rem;
+                font-weight: 600;
+            }
+
+                .btn-pc:hover {
+                    background: #115e59;
+                    border-color: #115e59;
+                    color: #fff;
+                }
+
+            .btn-toggle {
+                border-color: #dee2e6;
+                color: #64748b;
+                background: #fff;
+                font-size: .85rem;
+            }
+
+            .login-error {
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                color: #b91c1c;
+                border-radius: .5rem;
+                padding: .6rem .9rem;
+                font-size: .9rem;
+                margin-bottom: 1rem;
+            }
+
+                .login-error ul {
+                    margin: 0;
+                    padding-left: 1.1rem;
+                }
+
+            .validation-summary-valid {
+                display: none;
+            }
+
+            .login-foot {
+                color: #94a3b8;
+                font-size: .8rem;
+                text-align: center;
+                margin-top: 1.5rem;
+            }
+    </style>
+</head>
+<body>
+    <div class="login-wrap d-flex">
+
+        <section class="login-brand d-none d-md-flex flex-column justify-content-center">
+            <div class="login-brand-inner">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+                    <ellipse cx="32" cy="42" rx="14" ry="11" />
+                    <ellipse cx="14" cy="26" rx="6" ry="8" transform="rotate(-20 14 26)" />
+                    <ellipse cx="25" cy="16" rx="6" ry="8" />
+                    <ellipse cx="39" cy="16" rx="6" ry="8" />
+                    <ellipse cx="50" cy="26" rx="6" ry="8" transform="rotate(20 50 26)" />
+                </svg>
+                <h1>PetCare</h1>
+                <p class="brand-sub">Hệ thống quản lý chăm sóc thú cưng</p>
+                <ul class="brand-list">
+                    <li>Quản lý thú cưng và khách hàng</li>
+                    <li>Đặt lịch, phân công và theo dõi dịch vụ</li>
+                    <li>Thanh toán và thống kê doanh thu</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="login-form-side d-flex align-items-center justify-content-center">
+            <div class="login-card">
+                <div class="mobile-logo d-md-none">PetCare</div>
+                <h2>Đăng nhập</h2>
+                <p class="text-muted mb-4">Vui lòng nhập thông tin tài khoản để tiếp tục.</p>
 
                 <form asp-action="DangNhap" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                    <div asp-validation-summary="ModelOnly" class="login-error"></div>
 
                     <div class="mb-3">
                         <label asp-for="TenDangNhap" class="form-label"></label>
-                        <input asp-for="TenDangNhap" class="form-control" autofocus />
-                        <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+                        <input asp-for="TenDangNhap" class="form-control" autocomplete="username" autofocus />
+                        <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="MatKhau" class="form-label"></label>
-                        <input asp-for="MatKhau" class="form-control" />
-                        <span asp-validation-for="MatKhau" class="text-danger"></span>
+                        <div class="input-group">
+                            <input asp-for="MatKhau" class="form-control" autocomplete="current-password" />
+                            <button type="button" id="togglePw" class="btn btn-toggle">Hiện</button>
+                        </div>
+                        <span asp-validation-for="MatKhau" class="text-danger small"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+                    <button type="submit" class="btn btn-pc w-100">Đăng nhập</button>
                 </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-@section Scripts {
+                <div class="login-foot">&copy; 2026 PetCare</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
-}
+    <script>
+            document.getElementById('togglePw').addEventListener('click', function () {
+                var input = document.getElementById('MatKhau');
+                var hien = input.type === 'password';
+                input.type = hien ? 'text' : 'password';
+                this.textContent = hien ? 'Ẩn' : 'Hiện';
+            });
+    </script>
+</body>
+</html>
