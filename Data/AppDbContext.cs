@@ -45,4 +45,20 @@ public class AppDbContext : DbContext
 
         // ----- SV1 -----
         modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
-        modelBuilder.Entity<LoaiDichVu>().HasIndex(l
+        modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
+
+        // ----- SV2 -----
+
+        // ----- SV3 -----
+        modelBuilder.Entity<ChiTietGoiDichVu>()
+            .HasIndex(ct => new { ct.MaGoi, ct.MaDichVu })
+            .IsUnique();
+
+        // ----- SV4 -----
+        modelBuilder.Entity<ChuyenMonNhanVien>()
+            .HasIndex(x => new { x.MaNhanVien, x.TenChuyenMon })
+            .IsUnique();
+
+        // ----- SV5 -----
+    }
+}
