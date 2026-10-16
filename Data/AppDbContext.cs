@@ -23,10 +23,12 @@ public class AppDbContext : DbContext
     // public DbSet<DichVu> DichVu { get; set; }
     // public DbSet<LichHen> LichHen { get; set; }
 
-    // ===== SV4: PhanCongNhanVien, CaDichVu, KetQuaDichVu =====
-    // public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
-    // public DbSet<CaDichVu> CaDichVu { get; set; }
-    // public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
+    // ===== SV4: NhanVien, ChuyenMonNhanVien, PhanCongNhanVien, CaDichVu, KetQuaDichVu =====
+    public DbSet<NhanVien> NhanVien { get; set; }
+    public DbSet<ChuyenMonNhanVien> ChuyenMonNhanVien { get; set; }
+    public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
+    public DbSet<CaDichVu> CaDichVu { get; set; }
+    public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
 
     // ===== SV5: ThanhToan =====
     // public DbSet<ThanhToan> ThanhToan { get; set; }
@@ -48,6 +50,9 @@ public class AppDbContext : DbContext
         // ----- SV3 -----
 
         // ----- SV4 -----
+        modelBuilder.Entity<ChuyenMonNhanVien>()
+            .HasIndex(x => new { x.MaNhanVien, x.TenChuyenMon })
+            .IsUnique();
 
         // ----- SV5 -----
     }

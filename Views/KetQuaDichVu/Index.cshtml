@@ -1,0 +1,45 @@
+﻿
+@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
+
+@{
+    ViewData["Title"] = "Kết quả dịch vụ";
+}
+
+<h2>Kết quả dịch vụ</h2>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-info">@TempData["ThongBao"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Ghi nhận kết quả</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Mã kết quả</th>
+            <th>Mã ca</th>
+            <th>Mã khách hàng</th>
+            <th>Thời gian ca</th>
+            <th>Trạng thái</th>
+            <th>Thời gian ghi nhận</th>
+            <th>Ghi chú</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var kq in Model)
+    {
+        <tr>
+            <td>@kq.MaKetQuaDichVu</td>
+            <td>@kq.MaCaDichVu</td>
+            <td>@kq.MaKhachHang</td>
+            <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@kq.TrangThai</td>
+            <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@kq.GhiChu</td>
+        </tr>
+    }
+    </tbody>
+</table>

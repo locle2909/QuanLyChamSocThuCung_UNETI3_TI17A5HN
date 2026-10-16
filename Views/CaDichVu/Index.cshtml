@@ -1,0 +1,65 @@
+﻿
+@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
+
+@{
+    ViewData["Title"] = "Quản lý ca dịch vụ";
+}
+
+<h2>Quản lý ca dịch vụ</h2>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-info">@TempData["ThongBao"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Tạo ca dịch vụ</a>
+    <a asp-controller="PhanCongNhanVien" asp-action="Index"
+       class="btn btn-secondary">Phân công nhân viên</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Mã ca</th>
+            <th>Mã dịch vụ</th>
+            <th>Mã thú cưng</th>
+            <th>Bắt đầu</th>
+            <th>Kết thúc</th>
+            <th>Phòng / hình thức</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var ca in Model)
+    {
+        <tr>
+            <td>@ca.MaCaDichVu</td>
+            <td>@ca.MaDichVu</td>
+            <td>@ca.MaThuCung</td>
+            <td>@ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@ca.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@ca.PhongHocHoacHinhThuc</td>
+            <td>@ca.TrangThai</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@ca.MaCaDichVu"
+                   class="btn btn-sm btn-warning">Sửa</a>
+
+                @if (ca.TrangThai != "Đã hủy" &&
+                     ca.TrangThai != "Hoàn thành")
+                {
+                    <form asp-action="Huy" asp-route-id="@ca.MaCaDichVu"
+                          method="post" style="display:inline"
+                          onsubmit="return confirm('Hủy ca này?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-danger" type="submit">
+                            Hủy ca
+                        </button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

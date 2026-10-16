@@ -1,0 +1,60 @@
+﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.NhanVien>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+}
+
+<h2>Quản lý nhân viên</h2>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-warning">@TempData["ThongBao"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm nhân viên</a>
+    <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">
+        Quản lý ca dịch vụ
+    </a>
+    <a asp-controller="PhanCongNhanVien" asp-action="Index" class="btn btn-secondary">
+        Phân công nhân viên
+    </a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Mã</th>
+            <th>Họ tên</th>
+            <th>Số điện thoại</th>
+            <th>Email</th>
+            <th>Chức vụ</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var nv in Model)
+        {
+            <tr>
+                <td>@nv.MaNhanVien</td>
+                <td>@nv.HoTen</td>
+                <td>@nv.SoDienThoai</td>
+                <td>@nv.Email</td>
+                <td>@nv.ChucVu</td>
+                <td>@(nv.TrangThai ? "Đang hoạt động" : "Ngừng hoạt động")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@nv.MaNhanVien"
+                       class="btn btn-sm btn-warning">Sửa</a>
+
+                    <form asp-action="Delete" asp-route-id="@nv.MaNhanVien"
+                          method="post" style="display:inline"
+                          onsubmit="return confirm('Xóa nhân viên này?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
