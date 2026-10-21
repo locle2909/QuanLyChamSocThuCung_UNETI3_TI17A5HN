@@ -1,0 +1,136 @@
+﻿@model ThuCungIndexViewModel
+@{
+    ViewData["Title"] = "Quản lý thú cưng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Quản lý thú cưng</h1>
+        <div class="text-muted">Tổng số: @Model.TotalItems thú cưng</div>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">+ Thêm thú cưng</a>
+</div>
+
+<form method="get" asp-action="Index" class="card card-body mb-4">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="keyword" value="@Model.Keyword" class="form-control" placeholder="Tên, dịch vụ, SĐT hoặc Email" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Loại dịch vụ</label>
+            <select name="maLoaiDichVu" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var x in Model.LoaiDichVus)
+                {
+                    <option value="@x.MaLoaiDichVu" selected="@(Model.MaLoaiDichVu == x.MaLoaiDichVu ? "selected" : null)">@x.TenLoaiDichVu</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Giống/loài</label>
+            <select name="giongLoai" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var x in Model.GiongLoais)
+                {
+                    <option value="@x" selected="@(Model.GiongLoai == x ? "selected" : null)">@x</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-1">
+            <label class="form-label">Tuổi</label>
+            <input name="tuoi" value="@Model.Tuoi" type="number" min="0" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Trạng thái</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="Hoạt động" selected="@(Model.TrangThai == "Hoạt động" ? "selected" : null)">Hoạt động</option>
+                <option value="Ngừng hoạt động" selected="@(Model.TrangThai == "Ngừng hoạt động" ? "selected" : null)">Ngừng hoạt động</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Sắp xếp</label>
+            <select name="sort" class="form-select">
+                <option value="name_asc" selected="@(Model.Sort == "name_asc" ? "selected" : null)">Họ tên A → Z</option>
+                <option value="name_desc" selected="@(Model.Sort == "name_desc" ? "selected" : null)">Họ tên Z → A</option>
+                <option value="age_asc" selected="@(Model.Sort == "age_asc" ? "selected" : null)">Tuổi tăng</option>
+                <option value="age_desc" selected="@(Model.Sort == "age_desc" ? "selected" : null)">Tuổi giảm</option>
+                <option value="breed" selected="@(Model.Sort == "breed" ? "selected" : null)">Giống/loài theo nhóm</option>
+            </select>
+        </div>
+        <div class="col-md-9 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" type="submit">Tìm kiếm / Lọc</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Đặt lại</a>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive">
+<table class="table table-bordered table-hover align-middle bg-white">
+    <thead class="table-light">
+        <tr>
+            <th>Mã</th>
+            <th>Họ tên</th>
+            <th>Ngày sinh</th>
+            <th>Giới tính</th>
+            <th>SĐT</th>
+            <th>Email</th>
+            <th>Giống/loài</th>
+            <th>Tuổi</th>
+            <th>Trạng thái</th>
+            <th>Dịch vụ đang hiệu lực</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.Items.Count == 0)
+    {
+        <tr><td colspan="11" class="text-center py-4">Không có dữ liệu.</td></tr>
+    }
+    else
+    {
+        foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.MaThuCung</td>
+                <td class="fw-semibold">@item.HoTen</td>
+                <td>@item.NgaySinh.ToString("dd/MM/yyyy")</td>
+                <td>@item.GioiTinh</td>
+                <td>@item.SoDienThoai</td>
+                <td>@item.Email</td>
+                <td>@item.GiongLoai</td>
+                <td>@item.Tuoi</td>
+                <td><span class="badge @(item.TrangThai == "Hoạt động" ? "text-bg-success" : "text-bg-secondary")">@item.TrangThai</span></td>
+                <td>@item.ChuyenMons.Count(x => x.TrangThai == "Hiệu lực")</td>
+                <td class="text-nowrap">
+                    <a asp-action="Details" asp-route-id="@item.MaThuCung">Chi tiết</a> |
+                    <a asp-action="Edit" asp-route-id="@item.MaThuCung">Sửa</a> |
+                    <a class="text-danger" asp-action="Delete" asp-route-id="@item.MaThuCung">Xóa</a>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-maLoaiDichVu="@Model.MaLoaiDichVu" asp-route-giongLoai="@Model.GiongLoai" asp-route-tuoi="@Model.Tuoi" asp-route-trangThai="@Model.TrangThai" asp-route-sort="@Model.Sort" asp-route-page="@(Model.Page - 1)">Trước</a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-maLoaiDichVu="@Model.MaLoaiDichVu" asp-route-giongLoai="@Model.GiongLoai" asp-route-tuoi="@Model.Tuoi" asp-route-trangThai="@Model.TrangThai" asp-route-sort="@Model.Sort" asp-route-page="@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-keyword="@Model.Keyword" asp-route-maLoaiDichVu="@Model.MaLoaiDichVu" asp-route-giongLoai="@Model.GiongLoai" asp-route-tuoi="@Model.Tuoi" asp-route-trangThai="@Model.TrangThai" asp-route-sort="@Model.Sort" asp-route-page="@(Model.Page + 1)">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}

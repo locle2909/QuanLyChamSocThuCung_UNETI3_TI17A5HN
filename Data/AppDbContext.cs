@@ -15,8 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<LoaiDichVu> LoaiDichVu { get; set; }
 
     // ===== SV2: ThuCung, ChuyenMonThuCung =====
-    // public DbSet<ThuCung> ThuCung { get; set; }
-    // public DbSet<ChuyenMonThuCung> ChuyenMonThuCung { get; set; }
+    public DbSet<ThuCung> ThuCungs { get; set; }
+    public DbSet<ChuyenMonThuCung> ChuyenMonThuCungs { get; set; }
 
     // ===== SV3: KhachHang, DichVu, GoiDichVu, LichHen =====
     // public DbSet<KhachHang> KhachHang { get; set; }
@@ -48,6 +48,21 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
 
         // ----- SV2 -----
+        modelBuilder.Entity<ThuCung>().HasIndex(x => x.HoTen);
+        modelBuilder.Entity<ThuCung>().HasIndex(x => x.Email);
+        modelBuilder.Entity<ThuCung>().HasIndex(x => x.SoDienThoai);
+
+        modelBuilder.Entity<ChuyenMonThuCung>()
+            .HasOne(x => x.ThuCung)
+            .WithMany(x => x.ChuyenMons)
+            .HasForeignKey(x => x.MaThuCung)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChuyenMonThuCung>()
+            .HasOne(x => x.LoaiDichVu)
+            .WithMany(x => x.ChuyenMons)
+            .HasForeignKey(x => x.MaLoaiDichVu)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ----- SV3 -----
         modelBuilder.Entity<ChiTietGoiDichVu>()

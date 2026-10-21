@@ -28,7 +28,6 @@ public class LoaiDichVu
     [Display(Name = "Hoạt động")]
     public bool TrangThai { get; set; } = true;
 
-    // Bỏ comment khi nhánh SV2, SV3 đã gộp:
     // public ICollection<DichVu> DichVus { get; set; } = new List<DichVu>();
-    // public ICollection<ChuyenMonThuCung> ChuyenMons { get; set; } = new List<ChuyenMonThuCung>();
+    public ICollection<ChuyenMonThuCung> ChuyenMons { get; set; } = new List<ChuyenMonThuCung>();
 }
