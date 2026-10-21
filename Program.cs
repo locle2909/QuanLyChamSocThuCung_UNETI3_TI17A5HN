@@ -3,7 +3,7 @@
 // Nội dung thực hiện: Phần chung nhóm trưởng: cấu hình EF Core, Session, route mặc định.
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
-// using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data.Seed;   // bật khi dùng Seed
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,13 +21,13 @@ builder.Services.AddSession(opt =>
 
 var app = builder.Build();
 
-// Bật khối này SAU KHI đã có Migration và đã chạy Update-Database:
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//     Module1Seed.Seed(db);   // SV1
-//     // Module2Seed.Seed(db); // SV2 ... mỗi người thêm một dòng của mình
-// }
+// Chạy seed SAU KHI đã có Migration và đã chạy Update-Database:
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    Module1Seed.Seed(db);   // SV1
+    // Module2Seed.Seed(db); // SV2 ... mỗi người thêm một dòng của mình
+}
 
 if (!app.Environment.IsDevelopment())
 {

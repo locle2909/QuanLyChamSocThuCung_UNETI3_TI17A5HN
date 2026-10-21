@@ -1,0 +1,52 @@
+﻿
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu
+
+@{
+    ViewData["Title"] = "Sửa ca dịch vụ";
+}
+
+<h2>Sửa ca dịch vụ</h2>
+
+<form asp-action="Edit" asp-route-id="@Model.MaCaDichVu" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="MaCaDichVu" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="MaDichVu" class="form-label">Mã dịch vụ</label>
+        <input asp-for="MaDichVu" type="number" min="1" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaThuCung" class="form-label">Mã thú cưng</label>
+        <input asp-for="MaThuCung" type="number" min="1" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThoiGianBatDau" class="form-label">Bắt đầu</label>
+        <input asp-for="ThoiGianBatDau" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThoiGianKetThuc" class="form-label">Kết thúc</label>
+        <input asp-for="ThoiGianKetThuc" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
+        <span asp-validation-for="ThoiGianKetThuc" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhongHocHoacHinhThuc" class="form-label">
+            Phòng / hình thức
+        </label>
+        <input asp-for="PhongHocHoacHinhThuc" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+        <textarea asp-for="GhiChu" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

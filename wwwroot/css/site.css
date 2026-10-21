@@ -29,3 +29,22 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+/* ===== PetCare: thanh menu ===== */
+.navbar .navbar-nav {
+    flex-wrap: wrap;
+}
+
+.navbar .nav-link {
+    white-space: nowrap;
+    padding-left: .45rem;
+    padding-right: .45rem;
+    font-size: .86rem;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255,255,255,.85);
+}
+
+    .navbar-dark .navbar-nav .nav-link:hover {
+        color: #fff;
+    }
