@@ -72,7 +72,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.ThuCungs = await _context.ThuCungs.Where(x => x.TrangThai == "Hoạt động").OrderBy(x => x.HoTen).ToListAsync();
-            ViewBag.LoaiDichVus = await _context.LoaiDichVus.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync();
+            ViewBag.LoaiDichVus = await _context.LoaiDichVu.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync();
             return View(new ChuyenMonThuCung());
         }
 
@@ -81,7 +81,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         public async Task<IActionResult> Create(ChuyenMonThuCung model)
         {
             var pet = await _context.ThuCungs.FindAsync(model.MaThuCung);
-            var service = await _context.LoaiDichVus.FindAsync(model.MaLoaiDichVu);
+            var service = await _context.LoaiDichVu.FindAsync(model.MaLoaiDichVu);
 
             if (pet == null)
                 ModelState.AddModelError(nameof(model.MaThuCung), "Thú cưng không tồn tại.");
@@ -134,7 +134,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             if (id != model.MaChuyenMon) return NotFound();
 
             var pet = await _context.ThuCungs.FindAsync(model.MaThuCung);
-            var service = await _context.LoaiDichVus.FindAsync(model.MaLoaiDichVu);
+            var service = await _context.LoaiDichVu.FindAsync(model.MaLoaiDichVu);
 
             if (pet == null)
                 ModelState.AddModelError(nameof(model.MaThuCung), "Thú cưng không tồn tại.");
@@ -201,7 +201,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         private async Task LoadSelectLists()
         {
             ViewBag.ThuCungs = await _context.ThuCungs.Where(x => x.TrangThai == "Hoạt động").OrderBy(x => x.HoTen).ToListAsync();
-            ViewBag.LoaiDichVus = await _context.LoaiDichVus.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync();
+            ViewBag.LoaiDichVus = await _context.LoaiDichVu.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync();
         }
     }
 }

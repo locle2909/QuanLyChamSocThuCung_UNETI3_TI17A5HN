@@ -80,7 +80,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 Page = page,
                 PageSize = PageSize,
                 TotalItems = totalItems,
-                LoaiDichVus = await _context.LoaiDichVus.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync(),
+                LoaiDichVus = await _context.LoaiDichVu.Where(x => x.TrangThai).OrderBy(x => x.TenLoaiDichVu).ToListAsync(),
                 GiongLoais = await _context.ThuCungs.Select(x => x.GiongLoai).Distinct().OrderBy(x => x).ToListAsync()
             };
 
