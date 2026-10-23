@@ -1,0 +1,84 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Danh sách tài khoản (Admin): tìm kiếm, lọc vai trò, khóa/mở khóa. *@
+@model List<TaiKhoan>
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    var maHienTai = (int)ViewBag.MaHienTai;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Quản lý tài khoản</h3>
+    <a asp-action="Create" class="btn btn-primary">+ Thêm tài khoản</a>
+</div>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+@if (TempData["Loi"] != null)
+{
+    <div class="alert alert-danger">@TempData["Loi"]</div>
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5">
+        <input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm theo tên đăng nhập hoặc họ tên" />
+    </div>
+    <div class="col-md-3">
+        <select name="vaiTro" asp-items="(SelectList)ViewBag.DsVaiTro" class="form-select">
+            <option value="">Tất cả vai trò</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Tên đăng nhập</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th style="width:190px">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="6" class="text-center text-muted">Không có tài khoản nào.</td></tr>
+        }
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.TenDangNhap</td>
+                <td>@t.HoTen</td>
+                <td>@t.Email</td>
+                <td>@HangSo.VaiTro.Ten(t.VaiTro)</td>
+                <td>
+                    @if (t.TrangThai)
+                    {
+                        <span class="badge bg-success">Hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Đã khóa</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@t.MaTaiKhoan" class="btn btn-sm btn-outline-primary">Sửa</a>
+                    <form asp-action="DoiTrangThai" asp-route-id="@t.MaTaiKhoan" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm @(t.TrangThai ? "btn-outline-danger" : "btn-outline-success")"
+                                disabled="@(t.MaTaiKhoan == maHienTai)">
+                            @(t.TrangThai ? "Khóa" : "Mở khóa")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

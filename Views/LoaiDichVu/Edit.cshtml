@@ -1,0 +1,45 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Form sửa loại dịch vụ (Admin). *@
+@model LoaiDichVu
+@{
+    ViewData["Title"] = "Sửa loại dịch vụ";
+}
+
+<h3 class="mb-3">Sửa loại dịch vụ</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" asp-route-id="@Model.MaLoaiDichVu" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="MaLoaiDichVu" />
+
+            <div class="mb-3">
+                <label asp-for="TenLoaiDichVu" class="form-label"></label>
+                <input asp-for="TenLoaiDichVu" class="form-control" />
+                <span asp-validation-for="TenLoaiDichVu" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NhomDichVu" class="form-label"></label>
+                <select asp-for="NhomDichVu" asp-items="(SelectList)ViewBag.DsNhom" class="form-select"></select>
+                <span asp-validation-for="NhomDichVu" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MoTa" class="form-label"></label>
+                <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="MoTa" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="TrangThai" class="form-check-input" />
+                <label asp-for="TrangThai" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

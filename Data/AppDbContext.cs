@@ -1,5 +1,5 @@
-﻿// Họ và tên: Vũ Duy Cường
-// Mã sinh viên: 23103100305
+﻿// Họ và tên: ........
+// Mã sinh viên: ........
 // Nội dung thực hiện: Phần chung nhóm trưởng: DbContext khung, mỗi SV chỉ sửa vùng của mình.
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
@@ -11,8 +11,8 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     // ===== SV1: TaiKhoan, LoaiDichVu =====
-    // public DbSet<TaiKhoan> TaiKhoan { get; set; }
-    // public DbSet<LoaiDichVu> LoaiDichVu { get; set; }
+    public DbSet<TaiKhoan> TaiKhoan { get; set; }
+    public DbSet<LoaiDichVu> LoaiDichVu { get; set; }
 
     // ===== SV2: ThuCung, ChuyenMonThuCung =====
     // public DbSet<ThuCung> ThuCung { get; set; }
@@ -29,8 +29,7 @@ public class AppDbContext : DbContext
     // public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
 
     // ===== SV5: ThanhToan =====
-    public DbSet<ThanhToan> ThanhToan { get; set; }
-
+    // public DbSet<ThanhToan> ThanhToan { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,8 +40,8 @@ public class AppDbContext : DbContext
             fk.DeleteBehavior = DeleteBehavior.Restrict;
 
         // ----- SV1 -----
-        // modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
-        // modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
+        modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
+        modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
 
         // ----- SV2 -----
 
@@ -51,12 +50,5 @@ public class AppDbContext : DbContext
         // ----- SV4 -----
 
         // ----- SV5 -----
-         modelBuilder.Entity<ThanhToan>(e =>
-        {
-            e.Property(x => x.SoTien).HasPrecision(18, 2);
-            e.HasOne(x => x.LichHen)
-             .WithMany()
-             .HasForeignKey(x => x.MaLichHen);
-        });
     }
 }

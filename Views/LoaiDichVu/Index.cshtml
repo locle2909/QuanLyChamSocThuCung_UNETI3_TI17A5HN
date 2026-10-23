@@ -1,0 +1,76 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Danh sách loại dịch vụ (Admin): tìm kiếm, lọc nhóm, ẩn/hiện. *@
+@model List<LoaiDichVu>
+@{
+    ViewData["Title"] = "Quản lý loại dịch vụ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Quản lý loại dịch vụ</h3>
+    <a asp-action="Create" class="btn btn-primary">+ Thêm loại dịch vụ</a>
+</div>
+
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5">
+        <input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm theo tên loại dịch vụ" />
+    </div>
+    <div class="col-md-3">
+        <select name="nhom" asp-items="(SelectList)ViewBag.DsNhom" class="form-select">
+            <option value="">Tất cả nhóm</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Tên loại dịch vụ</th>
+            <th>Nhóm</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+            <th style="width:190px">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="5" class="text-center text-muted">Chưa có loại dịch vụ nào.</td></tr>
+        }
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.TenLoaiDichVu</td>
+                <td>@l.NhomDichVu</td>
+                <td>@l.MoTa</td>
+                <td>
+                    @if (l.TrangThai)
+                    {
+                        <span class="badge bg-success">Hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Đã tắt</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@l.MaLoaiDichVu" class="btn btn-sm btn-outline-primary">Sửa</a>
+                    <form asp-action="DoiTrangThai" asp-route-id="@l.MaLoaiDichVu" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm @(l.TrangThai ? "btn-outline-danger" : "btn-outline-success")">
+                            @(l.TrangThai ? "Tắt" : "Bật")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,54 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Form sửa tài khoản (Admin). Không sửa tên đăng nhập; để trống mật khẩu = giữ nguyên. *@
+@model TaiKhoan
+@{
+    ViewData["Title"] = "Sửa tài khoản";
+}
+
+<h3 class="mb-3">Sửa tài khoản</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" asp-route-id="@Model.MaTaiKhoan" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="MaTaiKhoan" />
+
+            <div class="mb-3">
+                <label class="form-label">Tên đăng nhập</label>
+                <input class="form-control" value="@Model.TenDangNhap" disabled />
+            </div>
+            <div class="mb-3">
+                <label asp-for="MatKhau" class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+                <input asp-for="MatKhau" type="password" class="form-control" data-val="false" />
+                <span asp-validation-for="MatKhau" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="HoTen" class="form-label"></label>
+                <input asp-for="HoTen" class="form-control" />
+                <span asp-validation-for="HoTen" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="VaiTro" class="form-label"></label>
+                <select asp-for="VaiTro" asp-items="(SelectList)ViewBag.DsVaiTro" class="form-select"></select>
+                <span asp-validation-for="VaiTro" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="TrangThai" class="form-check-input" />
+                <label asp-for="TrangThai" class="form-check-label"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
