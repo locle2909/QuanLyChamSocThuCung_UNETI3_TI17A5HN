@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
     public DbSet<CaDichVu> CaDichVu { get; set; }
     public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
+    public DbSet<DichVu> DichVu { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,5 +32,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChuyenMonNhanVien>()
             .HasIndex(x => new { x.MaNhanVien, x.TenChuyenMon })
             .IsUnique();
+
+        modelBuilder.Entity<DichVu>()
+        .ToTable("DichVus");
     }
 }

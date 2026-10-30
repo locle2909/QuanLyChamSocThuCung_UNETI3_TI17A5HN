@@ -69,4 +69,12 @@ public static class HangSo
         public const string DangThucHien = "Đang thực hiện";
         public const string HoanThanh = "Hoàn thành";
     }
+    // Trạng thái phân công nhân viên
+    public static class TrangThaiPhanCong
+    {
+        public const string HieuLuc = "Hiệu lực";
+        public const string HoanThanh = "Hoàn thành";
+        public const string DaHuy = "Đã hủy";
+    }
 }
+
