@@ -1,3 +1,4 @@
+﻿using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
@@ -6,6 +7,7 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
+[PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien, HangSo.VaiTro.KhachHang)]
 public class GoiDichVuController : Controller
 {
     private readonly AppDbContext _context;
@@ -27,6 +29,7 @@ public class GoiDichVuController : Controller
         return View(goiDichVus);
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -37,6 +40,7 @@ public class GoiDichVuController : Controller
         return View(model);
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(GoiDichVuFormViewModel model)
@@ -78,6 +82,7 @@ public class GoiDichVuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -107,6 +112,7 @@ public class GoiDichVuController : Controller
         return View(model);
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, GoiDichVuFormViewModel model)
@@ -148,6 +154,7 @@ public class GoiDichVuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Ngung(int id)

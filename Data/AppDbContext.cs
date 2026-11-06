@@ -1,5 +1,5 @@
-﻿// Họ và tên: ........
-// Mã sinh viên: ........
+﻿// Họ và tên: Lê Hữu Lộc
+// Mã sinh viên: 23103100283
 // Nội dung thực hiện: Phần chung nhóm trưởng: DbContext khung, mỗi SV chỉ sửa vùng của mình.
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     // ===== SV1: TaiKhoan, LoaiDichVu =====
     public DbSet<TaiKhoan> TaiKhoan { get; set; }
     public DbSet<LoaiDichVu> LoaiDichVu { get; set; }
+    public DbSet<YeuCauDatLaiMatKhau> YeuCauDatLaiMatKhau { get; set; }
 
     // ===== SV2: ThuCung, ChuyenMonThuCung =====
     public DbSet<ThuCung> ThuCungs { get; set; }
@@ -46,6 +47,7 @@ public class AppDbContext : DbContext
         // ----- SV1 -----
         modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
         modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
+        modelBuilder.Entity<YeuCauDatLaiMatKhau>().HasIndex(x => x.MaHash).IsUnique();
 
         // ----- SV2 -----
         modelBuilder.Entity<ThuCung>().HasIndex(x => x.HoTen);

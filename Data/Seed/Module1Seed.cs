@@ -10,50 +10,49 @@ public static class Module1Seed
 {
     public static void Seed(AppDbContext db)
     {
-        // Chỉ thêm khi bảng còn trống, chạy nhiều lần không bị trùng.
-        if (!db.TaiKhoan.Any())
-        {
-            db.TaiKhoan.AddRange(
-                new TaiKhoan
-                {
-                    TenDangNhap = "admin",
-                    MatKhau = PasswordHasher.Hash("Admin@123"),
-                    HoTen = "Quản trị viên",
-                    Email = "admin@petcare.vn",
-                    VaiTro = HangSo.VaiTro.Admin,
-                    TrangThai = true
-                },
-                new TaiKhoan
-                {
-                    TenDangNhap = "nhanvien1",
-                    MatKhau = PasswordHasher.Hash("NhanVien@123"),
-                    HoTen = "Nhân viên mẫu",
-                    Email = "nhanvien1@petcare.vn",
-                    VaiTro = HangSo.VaiTro.NhanVien,
-                    TrangThai = true
-                },
-                new TaiKhoan
-                {
-                    TenDangNhap = "khachhang1",
-                    MatKhau = PasswordHasher.Hash("KhachHang@123"),
-                    HoTen = "Khách hàng mẫu",
-                    Email = "khachhang1@petcare.vn",
-                    VaiTro = HangSo.VaiTro.KhachHang,
-                    TrangThai = true
-                });
-            db.SaveChanges();
-        }
+        // Thêm từng bản ghi theo tên: chạy nhiều lần không bị trùng.
+        ThemTaiKhoan(db, "admin", "Admin@123", "Quản trị viên", "admin@petcare.vn", HangSo.VaiTro.Admin);
+        ThemTaiKhoan(db, "quanly", "Admin@123", "Quản lý trung tâm", "quanly@petcare.vn", HangSo.VaiTro.Admin);
 
-        if (!db.LoaiDichVu.Any())
+        for (int i = 1; i <= 5; i++)
+            ThemTaiKhoan(db, "nhanvien" + i, "NhanVien@123", "Nhân viên " + i,
+                         $"nhanvien{i}@petcare.vn", HangSo.VaiTro.NhanVien);
+
+        for (int i = 1; i <= 30; i++)
+            ThemTaiKhoan(db, "khachhang" + i, "KhachHang@123", "Khách hàng " + i,
+                         $"khachhang{i}@petcare.vn", HangSo.VaiTro.KhachHang);
+        db.SaveChanges();
+
+        ThemLoai(db, "Tắm gội", "Vệ sinh - Làm đẹp", "Tắm, sấy, chải lông");
+        ThemLoai(db, "Cắt tỉa lông", "Vệ sinh - Làm đẹp", "Cắt tỉa, tạo kiểu lông");
+        ThemLoai(db, "Spa thú cưng", "Vệ sinh - Làm đẹp", "Massage, dưỡng lông, chăm sóc da");
+        ThemLoai(db, "Khám tổng quát", "Sức khỏe", "Khám sức khỏe định kỳ");
+        ThemLoai(db, "Tiêm phòng", "Sức khỏe", "Tiêm vắc xin theo lịch");
+        ThemLoai(db, "Chăm sóc răng miệng", "Sức khỏe", "Lấy cao răng, kiểm tra răng miệng");
+        ThemLoai(db, "Huấn luyện cơ bản", "Huấn luyện", "Dạy các lệnh cơ bản");
+        ThemLoai(db, "Huấn luyện nâng cao", "Huấn luyện", "Rèn kỷ luật và kỹ năng nâng cao");
+        ThemLoai(db, "Gửi thú cưng theo ngày", "Lưu trú", "Trông giữ thú cưng theo ngày");
+        ThemLoai(db, "Lưu trú dài ngày", "Lưu trú", "Trông giữ thú cưng nhiều ngày");
+        db.SaveChanges();
+    }
+
+    private static void ThemTaiKhoan(AppDbContext db, string ten, string matKhau, string hoTen, string email, string vaiTro)
+    {
+        if (db.TaiKhoan.Any(t => t.TenDangNhap == ten)) return;
+        db.TaiKhoan.Add(new TaiKhoan
         {
-            db.LoaiDichVu.AddRange(
-                new LoaiDichVu { TenLoaiDichVu = "Tắm gội", NhomDichVu = "Vệ sinh - Làm đẹp", MoTa = "Tắm, sấy, chải lông" },
-                new LoaiDichVu { TenLoaiDichVu = "Cắt tỉa lông", NhomDichVu = "Vệ sinh - Làm đẹp", MoTa = "Cắt tỉa, tạo kiểu lông" },
-                new LoaiDichVu { TenLoaiDichVu = "Khám tổng quát", NhomDichVu = "Sức khỏe", MoTa = "Khám sức khỏe định kỳ" },
-                new LoaiDichVu { TenLoaiDichVu = "Tiêm phòng", NhomDichVu = "Sức khỏe", MoTa = "Tiêm vắc xin theo lịch" },
-                new LoaiDichVu { TenLoaiDichVu = "Huấn luyện cơ bản", NhomDichVu = "Huấn luyện", MoTa = "Dạy các lệnh cơ bản" },
-                new LoaiDichVu { TenLoaiDichVu = "Gửi thú cưng theo ngày", NhomDichVu = "Lưu trú", MoTa = "Trông giữ thú cưng theo ngày" });
-            db.SaveChanges();
-        }
+            TenDangNhap = ten,
+            MatKhau = PasswordHasher.Hash(matKhau),
+            HoTen = hoTen,
+            Email = email,
+            VaiTro = vaiTro,
+            TrangThai = true
+        });
+    }
+
+    private static void ThemLoai(AppDbContext db, string ten, string nhom, string moTa)
+    {
+        if (db.LoaiDichVu.Any(l => l.TenLoaiDichVu == ten)) return;
+        db.LoaiDichVu.Add(new LoaiDichVu { TenLoaiDichVu = ten, NhomDichVu = nhom, MoTa = moTa, TrangThai = true });
     }
 }

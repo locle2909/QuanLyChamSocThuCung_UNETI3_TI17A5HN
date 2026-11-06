@@ -8,8 +8,6 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 
-// Dùng: [PhanQuyen(HangSo.VaiTro.Admin)] hoặc [PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien)]
-// Đặt trên Controller hoặc Action. Chạy ở server trước khi Action xử lý.
 public class PhanQuyenAttribute : ActionFilterAttribute
 {
     private readonly string[] _vaiTroChoPhep;

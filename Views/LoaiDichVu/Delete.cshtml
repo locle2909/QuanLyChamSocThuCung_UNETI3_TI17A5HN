@@ -1,0 +1,37 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Xác nhận xóa loại dịch vụ (Admin), chặn xóa khi đang được sử dụng. *@
+@model LoaiDichVu
+@{
+    ViewData["Title"] = "Xóa loại dịch vụ";
+    int soDangDung = ViewBag.SoDangDung ?? 0;
+}
+
+<h3 class="mb-3">Xóa loại dịch vụ</h3>
+
+<dl class="row">
+    <dt class="col-sm-3">Tên loại dịch vụ</dt>
+    <dd class="col-sm-9">@Model.TenLoaiDichVu</dd>
+
+    <dt class="col-sm-3">Nhóm dịch vụ</dt>
+    <dd class="col-sm-9">@Model.NhomDichVu</dd>
+
+    <dt class="col-sm-3">Đang được sử dụng</dt>
+    <dd class="col-sm-9">@soDangDung bản ghi</dd>
+</dl>
+
+@if (soDangDung > 0)
+{
+    <div class="alert alert-warning">
+        Loại dịch vụ này đang được sử dụng nên không thể xóa. Hãy tắt (ẩn) thay vì xóa.
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+}
+else
+{
+    <div class="alert alert-danger">Bạn có chắc muốn xóa loại dịch vụ này?</div>
+    <form asp-action="Delete" asp-route-id="@Model.MaLoaiDichVu" method="post">
+        <button type="submit" class="btn btn-danger">Xóa</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+    </form>
+}

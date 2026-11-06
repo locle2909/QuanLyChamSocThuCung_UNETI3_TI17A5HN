@@ -32,7 +32,7 @@ public class TaiKhoanController : Controller
 
         return View(new DangNhapViewModel());
     }
-
+    // Xử lý đăng nhập
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DangNhap(DangNhapViewModel model)
     {
@@ -57,6 +57,7 @@ public class TaiKhoanController : Controller
             return View(model);
         }
 
+        // Lưu phiên 
         HttpContext.Session.Clear();
         HttpContext.Session.SetInt32(HangSo.SessionKey.MaTaiKhoan, tk.MaTaiKhoan);
         HttpContext.Session.SetString(HangSo.SessionKey.HoTen, tk.HoTen);
@@ -107,6 +108,7 @@ public class TaiKhoanController : Controller
         return View(new TaiKhoan());
     }
 
+    //Thêm , kiểm tra trùng tên đăng nhập
     [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("TenDangNhap,MatKhau,HoTen,Email,VaiTro,TrangThai")] TaiKhoan model)

@@ -1,3 +1,4 @@
+﻿using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
@@ -5,6 +6,7 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
+[PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien, HangSo.VaiTro.KhachHang)]
 public class DichVuController : Controller
 {
     private readonly AppDbContext _context;
@@ -25,6 +27,7 @@ public class DichVuController : Controller
         return View(dichVus);
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpGet]
     public IActionResult Create()
     {
@@ -33,6 +36,7 @@ public class DichVuController : Controller
         return View(new DichVu());
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("TenDichVu,MoTa,Gia,NhomDichVu,TrangThai")] DichVu dichVu)
@@ -50,6 +54,7 @@ public class DichVuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -60,6 +65,7 @@ public class DichVuController : Controller
         return View(dichVu);
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("MaDichVu,TenDichVu,MoTa,Gia,NhomDichVu,TrangThai")] DichVu input)
@@ -86,6 +92,7 @@ public class DichVuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Ngung(int id)
