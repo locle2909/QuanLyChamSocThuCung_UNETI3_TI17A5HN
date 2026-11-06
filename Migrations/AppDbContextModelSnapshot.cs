@@ -248,6 +248,46 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
                     b.ToTable("KetQuaDichVu");
                 });
 
+            modelBuilder.Entity("QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.LichHen", b =>
+                {
+                    b.Property<int>("MaLichHen")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaLichHen"));
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("MaDichVu")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaTaiKhoan")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaThuCung")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ThoiGianBatDau")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ThoiGianKetThuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("MaLichHen");
+
+                    b.ToTable("LichHen");
+                });
+
             modelBuilder.Entity("QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.LoaiDichVu", b =>
                 {
                     b.Property<int>("MaLoaiDichVu")

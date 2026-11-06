@@ -21,7 +21,7 @@ public class AppDbContext : DbContext
 
     // ===== SV3: KhachHang, DichVu, GoiDichVu, LichHen =====
     // public DbSet<KhachHang> KhachHang { get; set; }
-    // public DbSet<LichHen> LichHen { get; set; }
+    public DbSet<LichHen> LichHen { get; set; }
     public DbSet<DichVu> DichVus { get; set; }
     public DbSet<GoiDichVu> GoiDichVus { get; set; }
     public DbSet<ChiTietGoiDichVu> ChiTietGoiDichVus { get; set; }

@@ -1,0 +1,65 @@
+@model LichHenFormViewModel
+
+@{
+    ViewData["Title"] = "Đặt lịch hẹn";
+}
+
+<h2>Đặt lịch hẹn</h2>
+<p class="text-muted">Lịch hẹn sẽ ở trạng thái chờ xác nhận cho đến khi nhân viên tiếp nhận.</p>
+
+@if (!(bool)ViewBag.CoThuCung)
+{
+    <div class="alert alert-warning">Bạn chưa có thú cưng đang hoạt động để đặt lịch.</div>
+}
+@if (!(bool)ViewBag.CoDichVu)
+{
+    <div class="alert alert-warning">Hiện không có dịch vụ nào đang mở đăng ký.</div>
+}
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="MaThuCung" class="form-label"></label>
+        <select asp-for="MaThuCung" asp-items="ViewBag.ThuCungs" class="form-select">
+            <option value="0">-- Chọn thú cưng --</option>
+        </select>
+        <span asp-validation-for="MaThuCung" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaDichVu" class="form-label"></label>
+        <select asp-for="MaDichVu" asp-items="ViewBag.DichVus" class="form-select">
+            <option value="0">-- Chọn dịch vụ --</option>
+        </select>
+        <span asp-validation-for="MaDichVu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThoiGianBatDau" class="form-label"></label>
+        <input asp-for="ThoiGianBatDau" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
+        <span asp-validation-for="ThoiGianBatDau" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ThoiGianKetThuc" class="form-label"></label>
+        <input asp-for="ThoiGianKetThuc" type="datetime-local"
+               asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
+        <span asp-validation-for="ThoiGianKetThuc" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label"></label>
+        <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary" @((bool)ViewBag.CoThuCung && (bool)ViewBag.CoDichVu ? null : "disabled")>Gửi yêu cầu</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
