@@ -82,30 +82,74 @@
     </a>
 </form>
 
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <!-- Thư viện Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css"
+          rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 
     <script>
         const selectCa = document.getElementById("MaCaDichVu");
         const selectNhanVien = document.getElementById("MaNhanVien");
         const thongBao = document.getElementById("thongBaoNhanVien");
 
+        // Khởi tạo tìm kiếm cho ca dịch vụ.
+        const timKiemCa = new TomSelect(selectCa, {
+            create: false,
+            maxOptions: 1000,
+            placeholder: "-- Tìm ca dịch vụ --",
+            searchField: ["text"],
+            allowEmptyOption: true
+        });
+
+        // Khởi tạo tìm kiếm cho nhân viên.
+        const timKiemNhanVien = new TomSelect(selectNhanVien, {
+            create: false,
+            maxOptions: 1000,
+            placeholder: "-- Tìm nhân viên --",
+            searchField: ["text"],
+            allowEmptyOption: true
+        });
+
+        // Ban đầu chưa cho chọn nhân viên.
+        timKiemNhanVien.disable();
+
         async function taiNhanVienTheoCa() {
             const maCa = selectCa.value;
 
             // Xóa danh sách nhân viên cũ.
-            selectNhanVien.innerHTML = "";
+            timKiemNhanVien.clear(true);
+            timKiemNhanVien.clearOptions();
 
             if (!maCa) {
-                selectNhanVien.disabled = true;
-                selectNhanVien.add(new Option("-- Vui lòng chọn ca trước --", ""));
-                thongBao.textContent = "Chọn ca dịch vụ để xem nhân viên phù hợp.";
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Vui lòng chọn ca trước --"
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.disable();
+
+                thongBao.textContent =
+                    "Chọn ca dịch vụ để xem nhân viên phù hợp.";
                 return;
             }
 
-            selectNhanVien.disabled = true;
-            selectNhanVien.add(new Option("Đang tải danh sách...", ""));
-            thongBao.textContent = "Đang kiểm tra chuyên môn và lịch làm việc...";
+            timKiemNhanVien.disable();
+
+            timKiemNhanVien.addOption({
+                value: "",
+                text: "Đang tải danh sách..."
+            });
+
+            timKiemNhanVien.refreshOptions(false);
+
+            thongBao.textContent =
+                "Đang kiểm tra chuyên môn và lịch làm việc...";
 
             try {
                 const response = await fetch(
@@ -119,12 +163,18 @@
 
                 const danhSach = await response.json();
 
-                selectNhanVien.innerHTML = "";
+                // Xóa thông báo tải.
+                timKiemNhanVien.clear(true);
+                timKiemNhanVien.clearOptions();
 
                 if (danhSach.length === 0) {
-                    selectNhanVien.add(
-                        new Option("-- Không có nhân viên phù hợp --", "")
-                    );
+                    timKiemNhanVien.addOption({
+                        value: "",
+                        text: "-- Không có nhân viên phù hợp --"
+                    });
+
+                    timKiemNhanVien.refreshOptions(false);
+                    timKiemNhanVien.disable();
 
                     thongBao.textContent =
                         "Không có nhân viên vừa đúng chuyên môn vừa không trùng lịch.";
@@ -132,34 +182,45 @@
                     return;
                 }
 
-                selectNhanVien.add(
-                    new Option("-- Chọn nhân viên --", "")
-                );
-
-                danhSach.forEach(nv => {
-                    selectNhanVien.add(
-                        new Option(
-                            nv.hoTen + " - Mã " + nv.maNhanVien,
-                            nv.maNhanVien
-                        )
-                    );
+                // Thêm lựa chọn mặc định.
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Chọn nhân viên --"
                 });
 
-                selectNhanVien.disabled = false;
+                // Thêm danh sách nhân viên từ API.
+                danhSach.forEach(nv => {
+                    timKiemNhanVien.addOption({
+                        value: nv.maNhanVien,
+                        text: nv.hoTen + " - Mã " + nv.maNhanVien
+                    });
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.enable();
 
                 thongBao.textContent =
-                    "Có " + danhSach.length + " nhân viên phù hợp với ca này.";
+                    "Có " + danhSach.length +
+                    " nhân viên phù hợp với ca này.";
 
             } catch (error) {
-                selectNhanVien.innerHTML = "";
-                selectNhanVien.add(
-                    new Option("-- Không tải được nhân viên --", "")
-                );
+                timKiemNhanVien.clear(true);
+                timKiemNhanVien.clearOptions();
+
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Không tải được nhân viên --"
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.disable();
 
                 thongBao.textContent = error.message;
             }
         }
 
+        // Khi thay đổi ca dịch vụ thì tải lại nhân viên.
         selectCa.addEventListener("change", taiNhanVienTheoCa);
     </script>
 }
+
