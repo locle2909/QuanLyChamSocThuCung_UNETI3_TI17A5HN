@@ -1,12 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 {
+    [PhanQuyen(HangSo.VaiTro.Admin)]
     public class ThuCungController : Controller
     {
         private readonly AppDbContext _context;

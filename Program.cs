@@ -1,9 +1,10 @@
-// Họ và tên: ........
-// Mã sinh viên: ........
+// Họ và tên: Lê Hữu Lộc
+// Mã sinh viên: 23103100283
 // Nội dung thực hiện: Phần chung nhóm trưởng: cấu hình EF Core, Session, route mặc định.
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data.Seed;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddSession(opt =>
 {
     opt.IdleTimeout = TimeSpan.FromMinutes(30);

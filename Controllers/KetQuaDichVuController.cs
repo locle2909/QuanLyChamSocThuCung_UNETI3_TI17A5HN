@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 {
+    [PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien)]
     public class KetQuaDichVuController : Controller
     {
         private readonly AppDbContext _context;

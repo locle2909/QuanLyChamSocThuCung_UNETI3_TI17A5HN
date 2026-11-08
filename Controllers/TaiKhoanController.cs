@@ -10,16 +10,20 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
 public class TaiKhoanController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly EmailService _email;
 
-    public TaiKhoanController(AppDbContext context)
+    public TaiKhoanController(AppDbContext context, EmailService email)
     {
         _context = context;
+        _email = email;
     }
 
     // ================= ĐĂNG NHẬP / ĐĂNG XUẤT (không yêu cầu quyền) =================
@@ -32,7 +36,7 @@ public class TaiKhoanController : Controller
 
         return View(new DangNhapViewModel());
     }
-
+    // Xử lý đăng nhập
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DangNhap(DangNhapViewModel model)
     {
@@ -57,6 +61,7 @@ public class TaiKhoanController : Controller
             return View(model);
         }
 
+        // Lưu phiên 
         HttpContext.Session.Clear();
         HttpContext.Session.SetInt32(HangSo.SessionKey.MaTaiKhoan, tk.MaTaiKhoan);
         HttpContext.Session.SetString(HangSo.SessionKey.HoTen, tk.HoTen);
@@ -107,6 +112,7 @@ public class TaiKhoanController : Controller
         return View(new TaiKhoan());
     }
 
+    //Thêm , kiểm tra trùng tên đăng nhập
     [PhanQuyen(HangSo.VaiTro.Admin)]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("TenDangNhap,MatKhau,HoTen,Email,VaiTro,TrangThai")] TaiKhoan model)
@@ -202,6 +208,109 @@ public class TaiKhoanController : Controller
         TempData["ThongBao"] = (tk.TrangThai ? "Đã mở khóa " : "Đã khóa ") + tk.TenDangNhap + ".";
         return RedirectToAction(nameof(Index));
     }
+    // ================= QUÊN MẬT KHẨU QUA EMAIL (không yêu cầu quyền) =================
+
+    [HttpGet]
+    public IActionResult QuenMatKhau() => View(new QuenMatKhauViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuenMatKhau(QuenMatKhauViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        string email = model.Email.Trim();
+        var ds = await _context.TaiKhoan.Where(t => t.Email == email && t.TrangThai).ToListAsync();
+
+        // Chỉ xử lý khi có đúng một tài khoản dùng email này.
+        // Dù đúng hay sai đều trả lời giống nhau để không lộ email nào có tài khoản.
+        if (ds.Count == 1)
+        {
+            var tk = ds[0];
+
+            // Chống gửi dồn dập: mỗi tài khoản tối đa 1 yêu cầu mỗi phút
+            bool vuaGui = await _context.YeuCauDatLaiMatKhau
+                .AnyAsync(y => y.MaTaiKhoan == tk.MaTaiKhoan && y.NgayTao > DateTime.Now.AddMinutes(-1));
+
+            if (!vuaGui)
+            {
+                // Vô hiệu các yêu cầu cũ chưa dùng của tài khoản này
+                var cu = await _context.YeuCauDatLaiMatKhau
+                    .Where(y => y.MaTaiKhoan == tk.MaTaiKhoan && !y.DaDung).ToListAsync();
+                foreach (var y in cu) y.DaDung = true;
+
+                string token = TaoToken();
+                _context.YeuCauDatLaiMatKhau.Add(new YeuCauDatLaiMatKhau
+                {
+                    MaTaiKhoan = tk.MaTaiKhoan,
+                    MaHash = BamToken(token),
+                    NgayTao = DateTime.Now,
+                    HetHan = DateTime.Now.AddMinutes(15)
+                });
+                await _context.SaveChangesAsync();
+
+                string lienKet = Url.Action(nameof(DatMatKhauMoi), "TaiKhoan", new { token }, Request.Scheme)!;
+                string html = "<p>Xin chào " + System.Net.WebUtility.HtmlEncode(tk.HoTen) + ",</p>"
+                    + "<p>Bạn vừa yêu cầu đặt lại mật khẩu tài khoản PetCare. Bấm vào liên kết dưới đây "
+                    + "(có hiệu lực trong 15 phút, chỉ dùng được một lần):</p>"
+                    + "<p><a href=\"" + lienKet + "\">Đặt lại mật khẩu</a></p>"
+                    + "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>";
+                await _email.GuiAsync(tk.Email!, "PetCare - Đặt lại mật khẩu", html, lienKet);
+            }
+        }
+
+        TempData["ThongBao"] = "Nếu email này thuộc một tài khoản đang hoạt động, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu. Liên kết có hiệu lực 15 phút.";
+        return RedirectToAction(nameof(QuenMatKhau));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DatMatKhauMoi(string? token)
+    {
+        if (string.IsNullOrEmpty(token) || await TimYeuCauHopLe(token) == null)
+            return View("LienKetKhongHopLe");
+
+        return View(new DatMatKhauMoiViewModel { Token = token });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DatMatKhauMoi(DatMatKhauMoiViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var yc = await TimYeuCauHopLe(model.Token);
+        if (yc == null) return View("LienKetKhongHopLe");
+
+        var tk = await _context.TaiKhoan.FindAsync(yc.MaTaiKhoan);
+        if (tk == null || !tk.TrangThai) return View("LienKetKhongHopLe");
+
+        tk.MatKhau = PasswordHasher.Hash(model.MatKhauMoi);
+
+        // Mã này và mọi mã khác chưa dùng của tài khoản đều hết hiệu lực
+        var conLai = await _context.YeuCauDatLaiMatKhau
+            .Where(y => y.MaTaiKhoan == tk.MaTaiKhoan && !y.DaDung).ToListAsync();
+        foreach (var y in conLai) y.DaDung = true;
+
+        await _context.SaveChangesAsync();
+
+        TempData["ThongBao"] = "Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.";
+        return RedirectToAction(nameof(DangNhap));
+    }
+
+    // Mã hợp lệ: đúng bản băm, chưa dùng, chưa hết hạn
+    private async Task<YeuCauDatLaiMatKhau?> TimYeuCauHopLe(string token)
+    {
+        string hash = BamToken(token);
+        return await _context.YeuCauDatLaiMatKhau
+            .FirstOrDefaultAsync(y => y.MaHash == hash && !y.DaDung && y.HetHan > DateTime.Now);
+    }
+
+    // 32 byte ngẫu nhiên, mã hóa Base64 an toàn cho URL
+    private static string TaoToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
+    // Chỉ lưu SHA-256 của mã trong database, không lưu mã gốc
+    private static string BamToken(string token) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
     private void NapVaiTro(string? chon)
     {

@@ -1,0 +1,72 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Bảng loại dịch vụ và thanh phân trang (tải lại bằng AJAX). *@
+@model IEnumerable<LoaiDichVu>
+@{
+    int trang = ViewBag.Trang;
+    int tongTrang = ViewBag.TongTrang;
+    string? q = ViewBag.Q;
+    string? nhomLoc = ViewBag.Nhom;
+    string? sapXep = ViewBag.SapXep;
+}
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Tên loại dịch vụ</th>
+            <th>Nhóm</th>
+            <th>Trạng thái</th>
+            <th style="width:290px">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var l in Model)
+        {
+            <tr>
+                <td>@l.TenLoaiDichVu</td>
+                <td>@l.NhomDichVu</td>
+                <td>
+                    @if (l.TrangThai) { <span class="badge bg-success">Hoạt động</span> }
+                    else { <span class="badge bg-secondary">Đã tắt</span> }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@l.MaLoaiDichVu" class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@l.MaLoaiDichVu" class="btn btn-sm btn-outline-primary">Sửa</a>
+                    <form asp-action="DoiTrangThai" asp-route-id="@l.MaLoaiDichVu" method="post" class="d-inline form-doi-trang-thai">
+                        <button type="submit" class="btn btn-sm @(l.TrangThai ? "btn-outline-danger" : "btn-outline-success")">
+                            @(l.TrangThai ? "Tắt" : "Bật")
+                        </button>
+                    </form>
+                    <a asp-action="Delete" asp-route-id="@l.MaLoaiDichVu" class="btn btn-sm btn-outline-danger">Xóa</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="4" class="text-center text-muted">Không có dữ liệu.</td></tr>
+        }
+    </tbody>
+</table>
+
+@if (tongTrang > 1)
+{
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(trang == 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-nhom="@nhomLoc"
+                   asp-route-sapXep="@sapXep" asp-route-trang="@(trang - 1)">Trước</a>
+            </li>
+            @for (int i = 1; i <= tongTrang; i++)
+            {
+                <li class="page-item @(i == trang ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-nhom="@nhomLoc"
+                       asp-route-sapXep="@sapXep" asp-route-trang="@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(trang == tongTrang ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-q="@q" asp-route-nhom="@nhomLoc"
+                   asp-route-sapXep="@sapXep" asp-route-trang="@(trang + 1)">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}
+<p class="text-muted">Trang @trang / @tongTrang (tổng @ViewBag.Tong loại dịch vụ)</p>

@@ -4,9 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c031fa16-0546-4da0-a743-cfcf1a96d1ec</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="MailKit" Version="4.18.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
