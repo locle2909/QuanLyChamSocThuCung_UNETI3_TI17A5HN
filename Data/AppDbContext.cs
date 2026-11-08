@@ -48,6 +48,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
         modelBuilder.Entity<LoaiDichVu>().HasIndex(l => l.TenLoaiDichVu).IsUnique();
         modelBuilder.Entity<YeuCauDatLaiMatKhau>().HasIndex(x => x.MaHash).IsUnique();
+        modelBuilder.Entity<YeuCauDatLaiMatKhau>()
+            .HasOne(x => x.TaiKhoan)
+            .WithMany()
+            .HasForeignKey(x => x.MaTaiKhoan)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ----- SV2 -----
         modelBuilder.Entity<ThuCung>().HasIndex(x => x.HoTen);
