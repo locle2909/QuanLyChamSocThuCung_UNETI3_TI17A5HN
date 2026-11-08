@@ -1,0 +1,55 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: Trang đặt mật khẩu mới từ liên kết trong email. *@
+@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels.DatMatKhauMoiViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt mật khẩu mới - PetCare</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { min-height: 100vh; margin: 0; background: #f8fafc; font-family: "Segoe UI", system-ui, sans-serif; }
+        .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .card-pc { width: 100%; max-width: 420px; background: #fff; border-radius: 1rem; padding: 2.25rem 2rem; box-shadow: 0 10px 30px rgba(15,23,42,.08); }
+        .btn-pc { background: #0f766e; border-color: #0f766e; color: #fff; padding: .7rem; border-radius: .5rem; font-weight: 600; }
+        .btn-pc:hover { background: #115e59; border-color: #115e59; color: #fff; }
+        .form-control { padding: .65rem .85rem; border-radius: .5rem; }
+        .form-control:focus { border-color: #14b8a6; box-shadow: 0 0 0 .2rem rgba(20,184,166,.2); }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card-pc">
+            <h3 class="mb-1">Đặt mật khẩu mới</h3>
+            <p class="text-muted mb-4">Nhập mật khẩu mới cho tài khoản của bạn (từ 6 ký tự trở lên).</p>
+
+            <form asp-action="DatMatKhauMoi" method="post">
+                <input asp-for="Token" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+                <div class="mb-3">
+                    <label asp-for="MatKhauMoi" class="form-label"></label>
+                    <input asp-for="MatKhauMoi" class="form-control" autocomplete="new-password" autofocus />
+                    <span asp-validation-for="MatKhauMoi" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="XacNhan" class="form-label"></label>
+                    <input asp-for="XacNhan" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="XacNhan" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-pc w-100">Đặt lại mật khẩu</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>
