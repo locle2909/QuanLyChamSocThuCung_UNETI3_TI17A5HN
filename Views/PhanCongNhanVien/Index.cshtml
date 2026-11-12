@@ -9,58 +9,129 @@
 
 @if (TempData["ThongBao"] != null)
 {
-    <div class="alert alert-info">@TempData["ThongBao"]</div>
+    <div class="alert alert-info">
+        @TempData["ThongBao"]
+    </div>
 }
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Phân công mới</a>
-    <a asp-controller="NhanVien" asp-action="Index" class="btn btn-secondary">
+    <a asp-action="Create" class="btn btn-primary">
+        Phân công mới
+    </a>
+
+    <a asp-controller="NhanVien"
+       asp-action="Index"
+       class="btn btn-secondary">
         Nhân viên
     </a>
-    <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">
+
+    <a asp-controller="CaDichVu"
+       asp-action="Index"
+       class="btn btn-secondary">
         Ca dịch vụ
     </a>
 </p>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Mã phân công</th>
-            <th>Nhân viên</th>
-            <th>Mã ca</th>
-            <th>Bắt đầu</th>
-            <th>Kết thúc</th>
-            <th>Trạng thái</th>
-            <th>Ghi chú</th>
-            <th>Thao tác</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var pc in Model)
-    {
-        <tr>
-            <td>@pc.MaPhanCong</td>
-            <td>@pc.HoTenNhanVien (Mã: @pc.MaNhanVien)</td>
-            <td>@pc.MaCaDichVu</td>
-            <td>@pc.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@pc.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@pc.TrangThai</td>
-            <td>@pc.GhiChu</td>
-            <td>
-                @if (pc.TrangThai != "Đã hủy" &&
-                     pc.TrangThai != "Hoàn thành")
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">
+        Chưa có dữ liệu phân công nhân viên.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Mã phân công</th>
+                    <th>Nhân viên</th>
+                    <th>Mã ca</th>
+                    <th>Bắt đầu</th>
+                    <th>Kết thúc</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi chú</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var pc in Model)
                 {
-                    <form asp-action="Huy" asp-route-id="@pc.MaPhanCong"
-                          method="post"
-                          onsubmit="return confirm('Hủy phân công này?');">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            Hủy
-                        </button>
-                    </form>
+                    <tr>
+                        <td>@pc.MaPhanCong</td>
+
+                        <td>
+                            @pc.HoTenNhanVien
+                            <br />
+                            <small class="text-muted">
+                                Mã: @pc.MaNhanVien
+                            </small>
+                        </td>
+
+                        <td>@pc.MaCaDichVu</td>
+
+                        <td>
+                            @pc.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            @pc.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            @if (pc.TrangThai == "Hiệu lực")
+                            {
+                                <span class="badge bg-success">
+                                    @pc.TrangThai
+                                </span>
+                            }
+                            else if (pc.TrangThai == "Đã hủy")
+                            {
+                                <span class="badge bg-danger">
+                                    @pc.TrangThai
+                                </span>
+                            }
+                            else if (pc.TrangThai == "Hoàn thành")
+                            {
+                                <span class="badge bg-primary">
+                                    @pc.TrangThai
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    @pc.TrangThai
+                                </span>
+                            }
+                        </td>
+
+                        <td>@pc.GhiChu</td>
+
+                        <td>
+                            @if (pc.TrangThai == "Hiệu lực")
+                            {
+                                <form asp-action="Huy"
+                                      asp-route-id="@pc.MaPhanCong"
+                                      method="post"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy phân công này?');">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger">
+                                        Hủy
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có thao tác</span>
+                            }
+                        </td>
+                    </tr>
                 }
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+            </tbody>
+        </table>
+    </div>
+}

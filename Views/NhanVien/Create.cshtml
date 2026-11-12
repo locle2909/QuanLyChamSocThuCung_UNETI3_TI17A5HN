@@ -3,12 +3,16 @@
 
 @{
     ViewData["Title"] = "Thêm nhân viên";
+
+    var danhSachChuyenMon =
+        ViewBag.DanhSachChuyenMon as List<string> ?? new List<string>();
 }
 
 <h2>Thêm nhân viên</h2>
 
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
+
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
@@ -20,23 +24,55 @@
     <div class="mb-3">
         <label asp-for="SoDienThoai" class="form-label">Số điện thoại</label>
         <input asp-for="SoDienThoai" class="form-control" />
+        <span asp-validation-for="SoDienThoai" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Email" class="form-label">Email</label>
         <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="ChucVu" class="form-label">Chức vụ</label>
         <input asp-for="ChucVu" class="form-control" />
+        <span asp-validation-for="ChucVu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Chuyên môn</label>
+
+        <select name="tenChuyenMons"
+                class="form-select"
+                multiple
+                size="4">
+
+            @foreach (var cm in danhSachChuyenMon)
+            {
+                <option value="@cm">@cm</option>
+            }
+        </select>
+
+        <small class="text-muted">
+            Giữ phím Ctrl để chọn nhiều chuyên môn.
+        </small>
+
+        <span class="text-danger">
+            @Html.ValidationMessage("tenChuyenMons")
+        </span>
     </div>
 
     <div class="form-check mb-3">
         <input asp-for="TrangThai" class="form-check-input" />
-        <label asp-for="TrangThai" class="form-check-label">Đang hoạt động</label>
+        <label asp-for="TrangThai" class="form-check-label">
+            Đang hoạt động
+        </label>
     </div>
 
     <button type="submit" class="btn btn-primary">Lưu</button>
     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

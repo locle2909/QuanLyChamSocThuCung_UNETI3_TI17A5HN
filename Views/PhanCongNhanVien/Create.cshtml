@@ -3,9 +3,11 @@
 
 @{
     ViewData["Title"] = "Phân công nhân viên";
+
     var nhanViens =
         ViewBag.NhanViens as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.NhanVien>
         ?? new();
+
     var caDichVus =
         ViewBag.CaDichVus as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
         ?? new();
@@ -15,26 +17,17 @@
 
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
+
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
     <div class="mb-3">
-        <label asp-for="MaNhanVien" class="form-label">Nhân viên</label>
-        <select asp-for="MaNhanVien" class="form-select">
-            <option value="">-- Chọn nhân viên --</option>
-            @foreach (var nv in nhanViens)
-            {
-                <option value="@nv.MaNhanVien">
-                    @nv.HoTen - Mã @nv.MaNhanVien
-                </option>
-            }
-        </select>
-        <span asp-validation-for="MaNhanVien" class="text-danger"></span>
-    </div>
+        <label asp-for="MaCaDichVu" class="form-label">
+            Ca dịch vụ
+        </label>
 
-    <div class="mb-3">
-        <label asp-for="MaCaDichVu" class="form-label">Ca dịch vụ</label>
-        <select asp-for="MaCaDichVu" class="form-select">
+        <select asp-for="MaCaDichVu" class="form-select" id="MaCaDichVu">
             <option value="">-- Chọn ca dịch vụ --</option>
+
             @foreach (var ca in caDichVus)
             {
                 <option value="@ca.MaCaDichVu">
@@ -47,14 +40,187 @@
                 </option>
             }
         </select>
+
         <span asp-validation-for="MaCaDichVu" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
-        <textarea asp-for="GhiChu" class="form-control"></textarea>
+        <label asp-for="MaNhanVien" class="form-label">
+            Nhân viên
+        </label>
+
+        <select asp-for="MaNhanVien"
+                class="form-select"
+                id="MaNhanVien"
+                disabled>
+            <option value="">-- Vui lòng chọn ca trước --</option>
+        </select>
+
+        <span asp-validation-for="MaNhanVien" class="text-danger"></span>
+
+        <small id="thongBaoNhanVien" class="text-muted">
+            Chọn ca dịch vụ để xem nhân viên phù hợp.
+        </small>
     </div>
 
-    <button type="submit" class="btn btn-primary">Xác nhận phân công</button>
-    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">
+            Ghi chú
+        </label>
+
+        <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
+
+        <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Xác nhận phân công
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Quay lại
+    </a>
 </form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- Thư viện Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css"
+          rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+
+    <script>
+        const selectCa = document.getElementById("MaCaDichVu");
+        const selectNhanVien = document.getElementById("MaNhanVien");
+        const thongBao = document.getElementById("thongBaoNhanVien");
+
+        // Khởi tạo tìm kiếm cho ca dịch vụ.
+        const timKiemCa = new TomSelect(selectCa, {
+            create: false,
+            maxOptions: 1000,
+            placeholder: "-- Tìm ca dịch vụ --",
+            searchField: ["text"],
+            allowEmptyOption: true
+        });
+
+        // Khởi tạo tìm kiếm cho nhân viên.
+        const timKiemNhanVien = new TomSelect(selectNhanVien, {
+            create: false,
+            maxOptions: 1000,
+            placeholder: "-- Tìm nhân viên --",
+            searchField: ["text"],
+            allowEmptyOption: true
+        });
+
+        // Ban đầu chưa cho chọn nhân viên.
+        timKiemNhanVien.disable();
+
+        async function taiNhanVienTheoCa() {
+            const maCa = selectCa.value;
+
+            // Xóa danh sách nhân viên cũ.
+            timKiemNhanVien.clear(true);
+            timKiemNhanVien.clearOptions();
+
+            if (!maCa) {
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Vui lòng chọn ca trước --"
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.disable();
+
+                thongBao.textContent =
+                    "Chọn ca dịch vụ để xem nhân viên phù hợp.";
+                return;
+            }
+
+            timKiemNhanVien.disable();
+
+            timKiemNhanVien.addOption({
+                value: "",
+                text: "Đang tải danh sách..."
+            });
+
+            timKiemNhanVien.refreshOptions(false);
+
+            thongBao.textContent =
+                "Đang kiểm tra chuyên môn và lịch làm việc...";
+
+            try {
+                const response = await fetch(
+                    '@Url.Action("NhanVienTheoCa", "PhanCongNhanVien")?maCaDichVu='
+                    + encodeURIComponent(maCa)
+                );
+
+                if (!response.ok) {
+                    throw new Error("Không thể tải danh sách nhân viên.");
+                }
+
+                const danhSach = await response.json();
+
+                // Xóa thông báo tải.
+                timKiemNhanVien.clear(true);
+                timKiemNhanVien.clearOptions();
+
+                if (danhSach.length === 0) {
+                    timKiemNhanVien.addOption({
+                        value: "",
+                        text: "-- Không có nhân viên phù hợp --"
+                    });
+
+                    timKiemNhanVien.refreshOptions(false);
+                    timKiemNhanVien.disable();
+
+                    thongBao.textContent =
+                        "Không có nhân viên vừa đúng chuyên môn vừa không trùng lịch.";
+
+                    return;
+                }
+
+                // Thêm lựa chọn mặc định.
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Chọn nhân viên --"
+                });
+
+                // Thêm danh sách nhân viên từ API.
+                danhSach.forEach(nv => {
+                    timKiemNhanVien.addOption({
+                        value: nv.maNhanVien,
+                        text: nv.hoTen + " - Mã " + nv.maNhanVien
+                    });
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.enable();
+
+                thongBao.textContent =
+                    "Có " + danhSach.length +
+                    " nhân viên phù hợp với ca này.";
+
+            } catch (error) {
+                timKiemNhanVien.clear(true);
+                timKiemNhanVien.clearOptions();
+
+                timKiemNhanVien.addOption({
+                    value: "",
+                    text: "-- Không tải được nhân viên --"
+                });
+
+                timKiemNhanVien.refreshOptions(false);
+                timKiemNhanVien.disable();
+
+                thongBao.textContent = error.message;
+            }
+        }
+
+        // Khi thay đổi ca dịch vụ thì tải lại nhân viên.
+        selectCa.addEventListener("change", taiNhanVienTheoCa);
+    </script>
+}
+

@@ -81,6 +81,8 @@ public class AppDbContext : DbContext
             .HasIndex(x => new { x.MaNhanVien, x.TenChuyenMon })
             .IsUnique();
 
+        modelBuilder.Entity<DichVu>().ToTable("DichVus");
+
         // ----- SV5 -----
     }
 }
