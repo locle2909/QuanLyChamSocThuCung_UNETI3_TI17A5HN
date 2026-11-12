@@ -65,7 +65,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 return Json(new List<object>());
             }
 
-            var dichVu = await _context.DichVu
+            var dichVu = await _context.DichVus
                 .FirstOrDefaultAsync(x => x.MaDichVu == ca.MaDichVu);
 
             if (dichVu == null)
@@ -163,7 +163,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             // Kiểm tra chuyên môn phù hợp với nhóm dịch vụ.
             if (nhanVien != null && ca != null)
             {
-                var dichVu = await _context.DichVu
+                var dichVu = await _context.DichVus
                     .FirstOrDefaultAsync(x =>
                         x.MaDichVu == ca.MaDichVu);
 
