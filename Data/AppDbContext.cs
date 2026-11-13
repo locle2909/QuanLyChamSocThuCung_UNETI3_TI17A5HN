@@ -34,7 +34,7 @@ public class AppDbContext : DbContext
     public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
 
     // ===== SV5: ThanhToan =====
-    // public DbSet<ThanhToan> ThanhToan { get; set; }
+    public DbSet<ThanhToan> ThanhToan { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,5 +84,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<DichVu>().ToTable("DichVus");
 
         // ----- SV5 -----
+        modelBuilder.Entity<ThanhToan>().HasIndex(x => x.MaLichHen);
+        modelBuilder.Entity<ThanhToan>()
+            .HasOne<LichHen>()
+            .WithMany()
+            .HasForeignKey(x => x.MaLichHen)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

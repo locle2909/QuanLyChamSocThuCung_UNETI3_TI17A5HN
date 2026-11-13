@@ -1,0 +1,131 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: SV5 - Thống kê (LINQ GroupBy/Count/Sum): dịch vụ, lịch hẹn, thú cưng, buổi phục vụ, doanh thu, chuyên cần; biểu đồ Chart.js. *@
+@using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers
+@model ThongKeViewModel
+@{
+    ViewData["Title"] = "Thống kê";
+    var nhanThang = Model.DoanhThuTheoThang.Select(x => "T" + x.Thang).ToArray();
+    var tienThang = Model.DoanhThuTheoThang.Select(x => x.SoTien).ToArray();
+    var nhanTrangThai = Model.LichHenTheoTrangThai.Select(x => x.Ten).ToArray();
+    var soTrangThai = Model.LichHenTheoTrangThai.Select(x => x.SoLuong).ToArray();
+}
+
+@functions {
+    // Bảng 2 cột Tên / Số lượng dùng lại cho nhiều thống kê
+    Microsoft.AspNetCore.Html.IHtmlContent Bang(string tieuDe, string tenCot, List<ThongKeItem> dong)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("<h5 class=\"mt-4\">").Append(System.Net.WebUtility.HtmlEncode(tieuDe)).Append("</h5>");
+        sb.Append("<table class=\"table table-bordered table-striped\"><thead><tr><th>Tên</th><th class=\"text-end\">")
+          .Append(System.Net.WebUtility.HtmlEncode(tenCot)).Append("</th></tr></thead><tbody>");
+        if (dong.Count == 0)
+            sb.Append("<tr><td colspan=\"2\" class=\"text-center text-muted\">Chưa có dữ liệu.</td></tr>");
+        foreach (var d in dong)
+            sb.Append("<tr><td>").Append(System.Net.WebUtility.HtmlEncode(d.Ten))
+              .Append("</td><td class=\"text-end\">").Append(d.SoLuong).Append("</td></tr>");
+        sb.Append("</tbody></table>");
+        return new Microsoft.AspNetCore.Html.HtmlString(sb.ToString());
+    }
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Thống kê năm @Model.Nam</h3>
+    <div class="d-flex gap-2">
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input name="nam" type="number" min="2000" max="2100" value="@Model.Nam" class="form-control" style="width:110px" />
+            <button type="submit" class="btn btn-outline-primary">Xem</button>
+        </form>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Dashboard</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <h5>Tiền thu theo tháng</h5>
+        <div style="height:280px"><canvas id="bieuDoDoanhThu"></canvas></div>
+    </div>
+    <div class="col-lg-4">
+        <h5>Lịch hẹn theo trạng thái</h5>
+        <div style="height:280px"><canvas id="bieuDoTrangThai"></canvas></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">@Bang("Số dịch vụ theo loại dịch vụ", "Số dịch vụ", Model.DichVuTheoLoai)</div>
+    <div class="col-lg-6">@Bang("Số khách hàng theo từng dịch vụ", "Số khách hàng", Model.KhachHangTheoDichVu)</div>
+    <div class="col-lg-6">@Bang("Loại dịch vụ được đặt nhiều nhất (top 5)", "Số lượt đặt", Model.LoaiDichVuNhieuDangKy)</div>
+    <div class="col-lg-6">@Bang("Thú cưng đặt nhiều dịch vụ nhất (top 5)", "Số lượt đặt", Model.ThuCungDatNhieu)</div>
+</div>
+
+<h5 class="mt-4">Số buổi phục vụ theo thú cưng và theo tháng (ca đã hoàn thành)</h5>
+<table class="table table-bordered table-striped">
+    <thead><tr><th>Thú cưng</th><th>Tháng</th><th class="text-end">Số buổi</th></tr></thead>
+    <tbody>
+    @if (!Model.BuoiPhucVuTheoThang.Any())
+    {
+        <tr><td colspan="3" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+    }
+    @foreach (var r in Model.BuoiPhucVuTheoThang)
+    {
+        <tr><td>@r.TenThuCung</td><td>@r.Thang</td><td class="text-end">@r.SoBuoi</td></tr>
+    }
+    </tbody>
+</table>
+
+<h5 class="mt-4">Chi phí và chuyên cần theo từng dịch vụ</h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Dịch vụ</th>
+                <th class="text-end">Số lịch</th>
+                <th class="text-end">Phải thu</th>
+                <th class="text-end">Đã thu</th>
+                <th class="text-end">Còn phải thu</th>
+                <th class="text-end">Có mặt / Tổng</th>
+                <th class="text-end">Tỷ lệ chuyên cần</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (!Model.ChiTietDichVu.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+        }
+        @foreach (var r in Model.ChiTietDichVu)
+        {
+            <tr>
+                <td>@r.TenDichVu</td>
+                <td class="text-end">@r.SoLichHieuLuc</td>
+                <td class="text-end">@r.PhaiThu.ToVnd()</td>
+                <td class="text-end">@r.DaThu.ToVnd()</td>
+                <td class="text-end">@r.ConPhaiThu.ToVnd()</td>
+                <td class="text-end">@r.SoBuoiCoMat / @r.TongKetQua</td>
+                <td class="text-end">@r.TyLeChuyenCan.ToString("0.0")%</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        new Chart(document.getElementById('bieuDoDoanhThu'), {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(nhanThang)),
+                datasets: [{ label: 'Tiền thu (₫)', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tienThang)), backgroundColor: '#14b8a6' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+        new Chart(document.getElementById('bieuDoTrangThai'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(nhanTrangThai)),
+                datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(soTrangThai)) }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+}

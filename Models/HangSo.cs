@@ -89,5 +89,15 @@ public static class HangSo
         public const string TienMat = "Tiền mặt";
         public const string ChuyenKhoan = "Chuyển khoản";
         public const string The = "Thẻ";
+
+        public static readonly string[] DanhSach = { TienMat, ChuyenKhoan, The };
+    }
+
+    // SV5: trạng thái chi phí của một lịch hẹn (tính từ tổng tiền đã thanh toán)
+    public static class TrangThaiChiPhi
+    {
+        public const string ChuaThanhToan = "Chưa thanh toán";
+        public const string ThanhToanMotPhan = "Thanh toán một phần";
+        public const string DaThanhToan = "Đã thanh toán";
     }
 }
