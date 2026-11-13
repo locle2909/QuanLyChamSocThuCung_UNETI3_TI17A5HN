@@ -1,0 +1,37 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: SV5 - Khách hàng xem tỷ lệ chuyên cần của chính mình theo từng dịch vụ. *@
+@model List<ChuyenCanRow>
+@{
+    ViewData["Title"] = "Chuyên cần của tôi";
+}
+
+<h3 class="mb-3">Chuyên cần của tôi</h3>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Dịch vụ</th>
+            <th class="text-end">Số buổi có mặt</th>
+            <th class="text-end">Tổng số buổi</th>
+            <th class="text-end">Tỷ lệ chuyên cần</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr><td colspan="4" class="text-center text-muted">Chưa có buổi dịch vụ nào được ghi nhận.</td></tr>
+    }
+    @foreach (var r in Model)
+    {
+        <tr>
+            <td>@r.TenDichVu</td>
+            <td class="text-end">@r.SoBuoiCoMat</td>
+            <td class="text-end">@r.TongBuoi</td>
+            <td class="text-end">@r.TyLe.ToString("0.0")%</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a asp-controller="ThanhToan" asp-action="Index" class="btn btn-outline-secondary">Quay lại chi phí</a>

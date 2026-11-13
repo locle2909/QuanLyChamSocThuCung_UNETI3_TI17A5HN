@@ -1,0 +1,139 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: SV5 - Danh sách chi phí dịch vụ: tìm kiếm, lọc, sắp xếp, phân trang. *@
+@using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers
+@model ThanhToanIndexViewModel
+@{
+    ViewData["Title"] = Model.LaAdmin ? "Thanh toán" : "Chi phí của tôi";
+    var dsTrangThaiChiPhi = new[]
+    {
+        HangSo.TrangThaiChiPhi.ChuaThanhToan,
+        HangSo.TrangThaiChiPhi.ThanhToanMotPhan,
+        HangSo.TrangThaiChiPhi.DaThanhToan
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h3 class="mb-0">@(Model.LaAdmin ? "Quản lý thanh toán" : "Chi phí dịch vụ của tôi")</h3>
+    @if (!Model.LaAdmin)
+    {
+        <a asp-controller="ThongKe" asp-action="ChuyenCanCuaToi" class="btn btn-outline-primary">Chuyên cần của tôi</a>
+    }
+</div>
+
+@if (TempData["ThongBao"] is string thongBao)
+{
+    <div class="alert alert-success">@thongBao</div>
+}
+@if (TempData["Loi"] is string loi)
+{
+    <div class="alert alert-warning">@loi</div>
+}
+
+<form asp-action="Index" method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+        <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+               placeholder="@(Model.LaAdmin ? "Khách hàng, dịch vụ hoặc mã lịch..." : "Dịch vụ hoặc mã lịch...")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="trangThaiChiPhi">Trạng thái chi phí</label>
+        <select id="trangThaiChiPhi" name="trangThaiChiPhi" class="form-select">
+            <option value="">Tất cả</option>
+            @foreach (var tt in dsTrangThaiChiPhi)
+            {
+                <option value="@tt" selected="@(Model.TrangThaiChiPhi == tt)">@tt</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="sapXep">Sắp xếp</label>
+        <select id="sapXep" name="sapXep" class="form-select">
+            <option value="" selected="@string.IsNullOrEmpty(Model.SapXep)">Ngày hẹn mới nhất</option>
+            <option value="ngay_asc" selected="@(Model.SapXep == "ngay_asc")">Ngày hẹn cũ nhất</option>
+            <option value="conlai_desc" selected="@(Model.SapXep == "conlai_desc")">Còn lại nhiều nhất</option>
+            <option value="conlai_asc" selected="@(Model.SapXep == "conlai_asc")">Còn lại ít nhất</option>
+            @if (Model.LaAdmin)
+            {
+                <option value="ten_asc" selected="@(Model.SapXep == "ten_asc")">Khách hàng A-Z</option>
+                <option value="ten_desc" selected="@(Model.SapXep == "ten_desc")">Khách hàng Z-A</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary">Lọc</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<p class="text-muted">
+    Tìm thấy <strong>@Model.TotalItems</strong> lịch hẹn. Tổng còn phải thanh toán:
+    <strong>@Model.TongConLai.ToVnd()</strong>
+</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Mã lịch</th>
+                @if (Model.LaAdmin) { <th>Khách hàng</th> }
+                <th>Dịch vụ</th>
+                <th>Ngày hẹn</th>
+                <th class="text-end">Đơn giá</th>
+                <th class="text-end">Đã thanh toán</th>
+                <th class="text-end">Còn lại</th>
+                <th>Trạng thái chi phí</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (!Model.Items.Any())
+        {
+            <tr><td colspan="@(Model.LaAdmin ? 9 : 8)" class="text-center text-muted">Không có dữ liệu phù hợp.</td></tr>
+        }
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.MaLichHen</td>
+                @if (Model.LaAdmin) { <td>@item.TenKhachHang</td> }
+                <td>@item.TenDichVu</td>
+                <td>@item.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+                <td class="text-end">@item.DonGia.ToVnd()</td>
+                <td class="text-end">@item.TongDaThanhToan.ToVnd()</td>
+                <td class="text-end">@item.SoTienConLai.ToVnd()</td>
+                <td><span class="badge @ChiPhiHelper.LayCssBadge(item.TrangThaiChiPhi)">@item.TrangThaiChiPhi</span></td>
+                <td class="text-nowrap">
+                    <a asp-action="LichSu" asp-route-id="@item.MaLichHen" class="btn btn-sm btn-outline-secondary">Hóa đơn</a>
+                    @if (Model.LaAdmin && item.SoTienConLai > 0)
+                    {
+                        <a asp-action="Create" asp-route-maLichHen="@item.MaLichHen" class="btn btn-sm btn-primary">Ghi nhận</a>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Phân trang">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageIndex - 1)"
+                   asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThaiChiPhi="@Model.TrangThaiChiPhi" asp-route-sapXep="@Model.SapXep">Trước</a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                       asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThaiChiPhi="@Model.TrangThaiChiPhi" asp-route-sapXep="@Model.SapXep">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageIndex + 1)"
+                   asp-route-tuKhoa="@Model.TuKhoa" asp-route-trangThaiChiPhi="@Model.TrangThaiChiPhi" asp-route-sapXep="@Model.SapXep">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}

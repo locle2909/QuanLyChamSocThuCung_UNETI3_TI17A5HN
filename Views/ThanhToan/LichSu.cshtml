@@ -1,0 +1,87 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: SV5 - Hóa đơn và lịch sử thanh toán của một lịch hẹn. *@
+@using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers
+@model HoaDonViewModel
+@{
+    ViewData["Title"] = "Hóa đơn";
+    var tt = Model.ThongTin;
+}
+
+<h3 class="mb-3">Hóa đơn - Lịch hẹn #@tt.MaLichHen</h3>
+
+@if (TempData["ThongBao"] is string thongBao)
+{
+    <div class="alert alert-success">@thongBao</div>
+}
+@if (TempData["Loi"] is string loi)
+{
+    <div class="alert alert-warning">@loi</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row gy-1">
+            <div class="col-md-6"><strong>Khách hàng:</strong> @tt.TenKhachHang</div>
+            <div class="col-md-6"><strong>Dịch vụ:</strong> @tt.TenDichVu</div>
+            <div class="col-md-6"><strong>Ngày hẹn:</strong> @tt.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</div>
+            <div class="col-md-6"><strong>Trạng thái lịch hẹn:</strong> @tt.TrangThaiLichHen</div>
+            <div class="col-md-3"><strong>Đơn giá:</strong> @tt.DonGia.ToVnd()</div>
+            <div class="col-md-3"><strong>Đã thanh toán:</strong> @tt.TongDaThanhToan.ToVnd()</div>
+            <div class="col-md-3"><strong>Còn lại:</strong> @tt.SoTienConLai.ToVnd()</div>
+            <div class="col-md-3">
+                <span class="badge @ChiPhiHelper.LayCssBadge(tt.TrangThaiChiPhi)">@tt.TrangThaiChiPhi</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Lịch sử thanh toán</h5>
+    @if (Model.LaAdmin && tt.SoTienConLai > 0 && tt.TrangThaiLichHen != HangSo.TrangThaiLichHen.DaHuy)
+    {
+        <a asp-action="Create" asp-route-maLichHen="@tt.MaLichHen" class="btn btn-primary">Ghi nhận thanh toán</a>
+    }
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Ngày thanh toán</th>
+                <th class="text-end">Số tiền</th>
+                <th>Phương thức</th>
+                <th>Người ghi nhận</th>
+                <th>Ghi chú</th>
+                @if (Model.LaAdmin) { <th>Thao tác</th> }
+            </tr>
+        </thead>
+        <tbody>
+        @if (!Model.LichSu.Any())
+        {
+            <tr><td colspan="@(Model.LaAdmin ? 6 : 5)" class="text-center text-muted">Chưa có khoản thanh toán nào.</td></tr>
+        }
+        @foreach (var t in Model.LichSu)
+        {
+            <tr>
+                <td>@t.NgayThanhToan.ToString("dd/MM/yyyy HH:mm")</td>
+                <td class="text-end">@t.SoTien.ToVnd()</td>
+                <td>@t.PhuongThuc</td>
+                <td>@t.NguoiGhiNhan</td>
+                <td>@t.GhiChu</td>
+                @if (Model.LaAdmin)
+                {
+                    <td>
+                        <form asp-action="Delete" asp-route-id="@t.MaThanhToan" method="post"
+                              onsubmit="return confirm('Xóa khoản thanh toán này? Chỉ dùng khi nhập nhầm.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>

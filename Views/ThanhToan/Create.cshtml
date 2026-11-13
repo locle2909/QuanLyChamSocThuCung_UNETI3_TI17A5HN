@@ -1,0 +1,60 @@
+﻿@* Họ và tên: Lê Hữu Lộc
+   Mã sinh viên: 23103100283
+   Nội dung thực hiện: SV5 - Form ghi nhận thanh toán cho một lịch hẹn (Admin). *@
+@using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers
+@model ThanhToanCreateViewModel
+@{
+    ViewData["Title"] = "Ghi nhận thanh toán";
+    var dsPhuongThuc = (string[])ViewBag.DsPhuongThuc;
+}
+
+<h3 class="mb-3">Ghi nhận thanh toán - Lịch hẹn #@Model.MaLichHen</h3>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6"><strong>Khách hàng:</strong> @Model.TenKhachHang</div>
+            <div class="col-md-6"><strong>Dịch vụ:</strong> @Model.TenDichVu</div>
+            <div class="col-md-4"><strong>Đơn giá:</strong> @Model.DonGia.ToVnd()</div>
+            <div class="col-md-4"><strong>Đã thanh toán:</strong> @Model.TongDaThanhToan.ToVnd()</div>
+            <div class="col-md-4"><strong>Còn lại:</strong> <span class="text-danger fw-bold">@Model.SoTienConLai.ToVnd()</span></div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" class="col-md-6">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="MaLichHen" />
+
+    <div class="mb-3">
+        <label asp-for="SoTien" class="form-label"></label>
+        <input asp-for="SoTien" type="number" step="1" min="0" class="form-control" />
+        <div class="form-text">Tối đa @Model.SoTienConLai.ToVnd() (số tiền còn lại).</div>
+        <span asp-validation-for="SoTien" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhuongThuc" class="form-label"></label>
+        <select asp-for="PhuongThuc" class="form-select">
+            <option value="">-- Chọn phương thức --</option>
+            @foreach (var pt in dsPhuongThuc)
+            {
+                <option value="@pt" selected="@(Model.PhuongThuc == pt)">@pt</option>
+            }
+        </select>
+        <span asp-validation-for="PhuongThuc" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label"></label>
+        <textarea asp-for="GhiChu" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu thanh toán</button>
+    <a asp-action="LichSu" asp-route-id="@Model.MaLichHen" class="btn btn-outline-secondary">Quay lại</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
