@@ -1,29 +1,46 @@
-﻿
+﻿@using Microsoft.AspNetCore.Http
 @model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
 
 @{
     ViewData["Title"] = "Quản lý ca dịch vụ";
+    var tenDv = ViewBag.DsTenDichVu as Dictionary<int, string> ?? new();
+    var tenTc = ViewBag.DsTenThuCung as Dictionary<int, string> ?? new();
+    var laAdmin = Context.Session.GetString(HangSo.SessionKey.VaiTro) == HangSo.VaiTro.Admin;
 }
 
-<h2>Quản lý ca dịch vụ</h2>
+<h2>@(laAdmin ? "Quản lý ca dịch vụ" : "Lịch làm việc của tôi")</h2>
 
 @if (TempData["ThongBao"] != null)
 {
-    <div class="alert alert-info">@TempData["ThongBao"]</div>
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+@if (TempData["Loi"] != null)
+{
+    <div class="alert alert-warning">@TempData["Loi"]</div>
+}
+@if (ViewBag.ChuaLienKet == true)
+{
+    <div class="alert alert-warning">
+        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên nên chưa thấy ca nào.
+        Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
+    </div>
 }
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Tạo ca dịch vụ</a>
-    <a asp-controller="PhanCongNhanVien" asp-action="Index"
-       class="btn btn-secondary">Phân công nhân viên</a>
+    @if (laAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Tạo ca dịch vụ</a>
+    }
+    <a asp-controller="PhanCongNhanVien" asp-action="Index" class="btn btn-secondary">Phân công</a>
+    <a asp-controller="KetQuaDichVu" asp-action="Index" class="btn btn-secondary">Kết quả dịch vụ</a>
 </p>
 
-<table class="table table-bordered table-striped">
+<table class="table table-bordered table-striped align-middle">
     <thead>
         <tr>
             <th>Mã ca</th>
-            <th>Mã dịch vụ</th>
-            <th>Mã thú cưng</th>
+            <th>Dịch vụ</th>
+            <th>Thú cưng</th>
             <th>Bắt đầu</th>
             <th>Kết thúc</th>
             <th>Phòng / hình thức</th>
@@ -32,34 +49,41 @@
         </tr>
     </thead>
     <tbody>
-    @foreach (var ca in Model)
-    {
-        <tr>
-            <td>@ca.MaCaDichVu</td>
-            <td>@ca.MaDichVu</td>
-            <td>@ca.MaThuCung</td>
-            <td>@ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@ca.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@ca.PhongHocHoacHinhThuc</td>
-            <td>@ca.TrangThai</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@ca.MaCaDichVu"
-                   class="btn btn-sm btn-warning">Sửa</a>
+        @foreach (var ca in Model)
+        {
+            <tr>
+                <td>@ca.MaCaDichVu</td>
+                <td>@(tenDv.TryGetValue(ca.MaDichVu, out var d) ? d : "#" + ca.MaDichVu)</td>
+                <td>@(tenTc.TryGetValue(ca.MaThuCung, out var t) ? t : "#" + ca.MaThuCung)</td>
+                <td>@ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@ca.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@ca.PhongHocHoacHinhThuc</td>
+                <td>@ca.TrangThai</td>
+                <td class="text-nowrap">
+                    @if (ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich)
+                    {
+                        if (laAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@ca.MaCaDichVu" class="btn btn-sm btn-warning">Sửa</a>
+                        }
 
-                @if (ca.TrangThai != "Đã hủy" &&
-                     ca.TrangThai != "Hoàn thành")
-                {
-                    <form asp-action="Huy" asp-route-id="@ca.MaCaDichVu"
-                          method="post" style="display:inline"
-                          onsubmit="return confirm('Hủy ca này?');">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-sm btn-danger" type="submit">
-                            Hủy ca
-                        </button>
-                    </form>
-                }
-            </td>
-        </tr>
-    }
+                        <form asp-action="HoanThanh" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
+                              onsubmit="return confirm('Hoàn thành ca này?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-sm btn-success" type="submit">Hoàn thành</button>
+                        </form>
+
+                        if (laAdmin)
+                        {
+                            <form asp-action="Huy" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
+                                  onsubmit="return confirm('Hủy ca này?');">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-danger" type="submit">Hủy ca</button>
+                            </form>
+                        }
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

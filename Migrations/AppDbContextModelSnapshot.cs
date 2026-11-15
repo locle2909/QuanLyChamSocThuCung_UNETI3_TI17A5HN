@@ -245,6 +245,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
 
                     b.HasKey("MaKetQuaDichVu");
 
+                    b.HasIndex("MaCaDichVu", "MaKhachHang")
+                        .IsUnique();
+
                     b.ToTable("KetQuaDichVu");
                 });
 
@@ -329,10 +332,6 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaNhanVien"));
 
-                    b.Property<string>("ChucVu")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -342,6 +341,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("MaTaiKhoan")
+                        .HasColumnType("int");
+
                     b.Property<string>("SoDienThoai")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -350,6 +352,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("MaNhanVien");
+
+                    b.HasIndex("MaTaiKhoan")
+                        .IsUnique()
+                        .HasFilter("[MaTaiKhoan] IS NOT NULL");
 
                     b.ToTable("NhanVien");
                 });
@@ -602,6 +608,14 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Migrations
                     b.Navigation("LoaiDichVu");
 
                     b.Navigation("ThuCung");
+                });
+
+            modelBuilder.Entity("QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.NhanVien", b =>
+                {
+                    b.HasOne("QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.TaiKhoan", null)
+                        .WithMany()
+                        .HasForeignKey("MaTaiKhoan")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.ThanhToan", b =>

@@ -18,9 +18,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
         [StringLength(100)]
         public string? Email { get; set; }
 
-        [StringLength(100)]
-        public string? ChucVu { get; set; }
-
         public bool TrangThai { get; set; } = true;
+
+        [Display(Name = "Tài khoản đăng nhập")]
+        public int? MaTaiKhoan { get; set; }
     }
 }

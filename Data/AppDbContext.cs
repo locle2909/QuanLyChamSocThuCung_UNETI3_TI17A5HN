@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<CaDichVu> CaDichVu { get; set; }
     public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
 
+
     // ===== SV5: ThanhToan =====
     public DbSet<ThanhToan> ThanhToan { get; set; }
 
@@ -82,6 +83,19 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<DichVu>().ToTable("DichVus");
+        modelBuilder.Entity<KetQuaDichVu>()
+    .HasIndex(x => new { x.MaCaDichVu, x.MaKhachHang })
+    .IsUnique();
+
+        modelBuilder.Entity<NhanVien>()
+    .HasIndex(x => x.MaTaiKhoan)
+    .IsUnique();
+
+        modelBuilder.Entity<NhanVien>()
+            .HasOne<TaiKhoan>()
+            .WithMany()
+            .HasForeignKey(x => x.MaTaiKhoan)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // ----- SV5 -----
         modelBuilder.Entity<ThanhToan>().HasIndex(x => x.MaLichHen);
