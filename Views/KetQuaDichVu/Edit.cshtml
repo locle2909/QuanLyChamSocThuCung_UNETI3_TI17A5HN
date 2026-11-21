@@ -1,0 +1,45 @@
+﻿@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.KetQuaDichVu
+
+@{
+    ViewData["Title"] = "Sửa kết quả dịch vụ";
+    bool caDaHoanThanh = ViewBag.CaDaHoanThanh == true;
+}
+
+<h2>Sửa kết quả dịch vụ</h2>
+
+@if (caDaHoanThanh)
+{
+    <div class="alert alert-warning">
+        Ca đã hoàn thành. Chỉ Admin được sửa và bắt buộc ghi lý do vào ghi chú.
+    </div>
+}
+
+<p>
+    <strong>Khách hàng:</strong> @ViewBag.TenKhachHang |
+    <strong>Dịch vụ:</strong> @ViewBag.TenDichVu |
+    <strong>Thú cưng:</strong> @ViewBag.TenThuCung
+</p>
+
+<form asp-action="Edit" asp-route-id="@Model.MaKetQuaDichVu" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="TrangThaiKetQuaDichVu" class="form-label">Trạng thái kết quả</label>
+        <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
+            <option value="Chờ thực hiện">Chờ thực hiện</option>
+            <option value="Đang thực hiện">Đang thực hiện</option>
+            <option value="Hoàn thành">Hoàn thành</option>
+        </select>
+        <span asp-validation-for="TrangThaiKetQuaDichVu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">Ghi chú @(caDaHoanThanh ? "(lý do sửa - bắt buộc)" : "")</label>
+        <textarea asp-for="GhiChu" class="form-control"></textarea>
+        <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

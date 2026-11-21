@@ -13,7 +13,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
 
         public DateTime NgayPhanCong { get; set; } = DateTime.Now;
 
-        public string TrangThai { get; set; } = "Đã phân công";
+        public string TrangThai { get; set; } = HangSo.TrangThaiPhanCong.HieuLuc;
 
         public string? GhiChu { get; set; }
     }

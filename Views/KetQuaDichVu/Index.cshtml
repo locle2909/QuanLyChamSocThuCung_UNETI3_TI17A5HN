@@ -1,31 +1,46 @@
-﻿
-@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
+﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
 
 @{
     ViewData["Title"] = "Kết quả dịch vụ";
 }
 
 <h2>Kết quả dịch vụ</h2>
+@if (ViewBag.ChuaLienKet == true)
+{
+    <div class="alert alert-warning">
+        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên nên chưa thấy ca nào.
+        Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
+    </div>
+}
 
 @if (TempData["ThongBao"] != null)
 {
-    <div class="alert alert-info">@TempData["ThongBao"]</div>
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+@if (TempData["Loi"] != null)
+{
+    <div class="alert alert-warning">@TempData["Loi"]</div>
 }
 
 <p>
     <a asp-action="Create" class="btn btn-primary">Ghi nhận kết quả</a>
+    <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">Ca dịch vụ</a>
 </p>
 
-<table class="table table-bordered table-striped">
+<table class="table table-bordered table-striped align-middle">
     <thead>
         <tr>
-            <th>Mã kết quả</th>
-            <th>Mã ca</th>
-            <th>Mã khách hàng</th>
+            <th>Mã KQ</th>
+            <th>Ca</th>
+            <th>Khách hàng</th>
+            <th>Dịch vụ</th>
+            <th>Thú cưng</th>
             <th>Thời gian ca</th>
-            <th>Trạng thái</th>
-            <th>Thời gian ghi nhận</th>
+            <th>Trạng thái ca</th>
+            <th>Kết quả</th>
+            <th>Ghi nhận lúc</th>
             <th>Ghi chú</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -34,11 +49,20 @@
         <tr>
             <td>@kq.MaKetQuaDichVu</td>
             <td>@kq.MaCaDichVu</td>
-            <td>@kq.MaKhachHang</td>
+            <td>@kq.TenKhachHang</td>
+            <td>@kq.TenDichVu</td>
+            <td>@kq.TenThuCung</td>
             <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@kq.TrangThaiCa</td>
             <td>@kq.TrangThai</td>
             <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
             <td>@kq.GhiChu</td>
+            <td>
+                @if (kq.CoTheSua)
+                {
+                    <a asp-action="Edit" asp-route-id="@kq.MaKetQuaDichVu" class="btn btn-sm btn-warning">Sửa</a>
+                }
+            </td>
         </tr>
     }
     </tbody>

@@ -1,0 +1,44 @@
+﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
+
+@{
+    ViewData["Title"] = "Kết quả dịch vụ của tôi";
+}
+
+<h2>Kết quả dịch vụ của tôi</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Bạn chưa có kết quả dịch vụ nào.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Dịch vụ</th>
+                    <th>Thú cưng</th>
+                    <th>Thời gian ca</th>
+                    <th>Trạng thái ca</th>
+                    <th>Kết quả</th>
+                    <th>Cập nhật lúc</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var kq in Model)
+            {
+                <tr>
+                    <td>@kq.TenDichVu</td>
+                    <td>@kq.TenThuCung</td>
+                    <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@kq.TrangThaiCa</td>
+                    <td>@kq.TrangThai</td>
+                    <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@kq.GhiChu</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

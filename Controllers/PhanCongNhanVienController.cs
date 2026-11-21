@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 {
@@ -18,14 +19,13 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         }
 
         // 1. Hiển thị danh sách phân công
+        // 1. Hiển thị danh sách phân công
         public async Task<IActionResult> Index()
         {
-            var danhSach = await (
+            var truyVan =
                 from pc in _context.PhanCongNhanVien
-                join nv in _context.NhanVien
-                    on pc.MaNhanVien equals nv.MaNhanVien
-                join ca in _context.CaDichVu
-                    on pc.MaCaDichVu equals ca.MaCaDichVu
+                join nv in _context.NhanVien on pc.MaNhanVien equals nv.MaNhanVien
+                join ca in _context.CaDichVu on pc.MaCaDichVu equals ca.MaCaDichVu
                 orderby ca.ThoiGianBatDau descending
                 select new PhanCongHienThi
                 {
@@ -37,13 +37,27 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                     ThoiGianKetThuc = ca.ThoiGianKetThuc,
                     TrangThai = pc.TrangThai,
                     GhiChu = pc.GhiChu
-                }).ToListAsync();
+                };
 
-            return View(danhSach);
+            // Nhân viên chỉ xem phân công của chính mình
+            if (!HttpContext.LaAdmin())
+            {
+                var maTk = HttpContext.LayMaTaiKhoan();
+                var maNhanVien = await _context.NhanVien
+                    .Where(n => n.MaTaiKhoan == maTk && n.TrangThai)
+                    .Select(n => (int?)n.MaNhanVien)
+                    .FirstOrDefaultAsync();
+
+                ViewBag.ChuaLienKet = maNhanVien == null;
+                truyVan = truyVan.Where(x => x.MaNhanVien == maNhanVien);
+            }
+
+            return View(await truyVan.ToListAsync());
         }
 
         // 2. Hiển thị giao diện tạo phân công
         [HttpGet]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
         public async Task<IActionResult> Create()
         {
             await NapDanhSachLuaChon();
@@ -53,38 +67,42 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 
         // 3. Lấy nhân viên có chuyên môn phù hợp với ca được chọn
         [HttpGet]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
         public async Task<IActionResult> NhanVienTheoCa(int maCaDichVu)
         {
-            var ca = await _context.CaDichVu
+            var ca = await _context.CaDichVu.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaCaDichVu == maCaDichVu);
 
-            if (ca == null ||
-                ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHuy ||
-                ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh)
-            {
+            if (ca == null || ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
                 return Json(new List<object>());
-            }
 
-            var dichVu = await _context.DichVus
+            var dichVu = await _context.DichVus.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaDichVu == ca.MaDichVu);
-
             if (dichVu == null)
                 return Json(new List<object>());
 
-            var nhomDichVu = dichVu.NhomDichVu.Trim();
+            var nhom = dichVu.NhomDichVu.Trim();
+            var maThuCung = ca.MaThuCung;
+
+            // Thú cưng của ca phải có thông tin chăm sóc hiệu lực đúng loại dịch vụ
+            bool thuCungDung = await (
+                from cm in _context.ChuyenMonThuCungs
+                join l in _context.LoaiDichVu on cm.MaLoaiDichVu equals l.MaLoaiDichVu
+                where cm.MaThuCung == maThuCung
+                      && cm.TrangThai == HangSo.TrangThaiChuyenMon.HieuLuc
+                      && l.TrangThai
+                      && l.NhomDichVu == nhom
+                select cm.MaChuyenMon).AnyAsync();
+            if (!thuCungDung)
+                return Json(new List<object>());
 
             var danhSach = await _context.NhanVien
-                .Where(nv =>
-                    nv.TrangThai &&
-                    _context.ChuyenMonNhanVien.Any(cm =>
-                        cm.MaNhanVien == nv.MaNhanVien &&
-                        cm.TenChuyenMon.Trim() == nhomDichVu))
+                .Where(nv => nv.TrangThai &&
+                             _context.ChuyenMonNhanVien.Any(cm =>
+                                 cm.MaNhanVien == nv.MaNhanVien &&
+                                 cm.TenChuyenMon.Trim() == nhom))
                 .OrderBy(nv => nv.HoTen)
-                .Select(nv => new
-                {
-                    nv.MaNhanVien,
-                    nv.HoTen
-                })
+                .Select(nv => new { nv.MaNhanVien, nv.HoTen })
                 .ToListAsync();
 
             return Json(danhSach);
@@ -93,6 +111,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         // 4. Xử lý tạo phân công
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
         public async Task<IActionResult> Create(PhanCongNhanVien pc)
         {
             // Hai trường này do hệ thống tự thiết lập.
@@ -161,34 +180,12 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             }
 
             // Kiểm tra chuyên môn phù hợp với nhóm dịch vụ.
+            // 8.2: kiểm tra chuyên môn nhân viên và thông tin chăm sóc của thú cưng
             if (nhanVien != null && ca != null)
             {
-                var dichVu = await _context.DichVus
-                    .FirstOrDefaultAsync(x =>
-                        x.MaDichVu == ca.MaDichVu);
-
-                if (dichVu == null)
-                {
-                    ModelState.AddModelError(
-                        nameof(pc.MaCaDichVu),
-                        "Không tìm thấy dịch vụ của ca này.");
-                }
-                else
-                {
-                    var nhomDichVu = dichVu.NhomDichVu.Trim();
-
-                    var dungChuyenMon = await _context.ChuyenMonNhanVien
-                        .AnyAsync(x =>
-                            x.MaNhanVien == pc.MaNhanVien &&
-                            x.TenChuyenMon.Trim() == nhomDichVu);
-
-                    if (!dungChuyenMon)
-                    {
-                        ModelState.AddModelError(
-                            nameof(pc.MaNhanVien),
-                            "Nhân viên không có chuyên môn phù hợp với dịch vụ này.");
-                    }
-                }
+                var loiChuyenMon = await KiemTraChuyenMon(ca, nhanVien.MaNhanVien);
+                if (loiChuyenMon != null)
+                    ModelState.AddModelError(nameof(pc.MaNhanVien), loiChuyenMon);
             }
 
             // Kiểm tra nhân viên có bị trùng lịch hay không.
@@ -257,6 +254,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         // 5. Hủy phân công
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
         public async Task<IActionResult> Huy(int id)
         {
             var pc = await _context.PhanCongNhanVien
@@ -299,6 +297,37 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             TempData["ThongBao"] = "Đã hủy phân công nhân viên.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // 8.2: nhân viên có chuyên môn đúng nhóm dịch vụ, và thú cưng của ca có thông tin chăm sóc
+        // đang hiệu lực đúng loại dịch vụ. Trả về null nếu hợp lệ, ngược lại trả về thông báo lỗi.
+        private async Task<string?> KiemTraChuyenMon(CaDichVu ca, int maNhanVien)
+        {
+            var dichVu = await _context.DichVus.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.MaDichVu == ca.MaDichVu);
+            if (dichVu == null)
+                return "Không tìm thấy dịch vụ của ca này.";
+
+            var nhom = dichVu.NhomDichVu.Trim();
+
+            bool nhanVienDung = await _context.ChuyenMonNhanVien.AnyAsync(x =>
+                x.MaNhanVien == maNhanVien && x.TenChuyenMon.Trim() == nhom);
+            if (!nhanVienDung)
+                return "Nhân viên không có chuyên môn phù hợp với dịch vụ này.";
+
+            var maThuCung = ca.MaThuCung;
+            bool thuCungDung = await (
+                from cm in _context.ChuyenMonThuCungs
+                join l in _context.LoaiDichVu on cm.MaLoaiDichVu equals l.MaLoaiDichVu
+                where cm.MaThuCung == maThuCung
+                      && cm.TrangThai == HangSo.TrangThaiChuyenMon.HieuLuc
+                      && l.TrangThai
+                      && l.NhomDichVu == nhom
+                select cm.MaChuyenMon).AnyAsync();
+            if (!thuCungDung)
+                return "Thú cưng chưa có thông tin chăm sóc đang hiệu lực đúng loại dịch vụ này.";
+
+            return null;
         }
 
         // 6. Nạp danh sách lựa chọn cho giao diện

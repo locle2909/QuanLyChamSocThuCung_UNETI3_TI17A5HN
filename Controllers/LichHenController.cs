@@ -5,6 +5,7 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
@@ -180,13 +181,13 @@ public class LichHenController : Controller
             && x.TrangThai != HangSo.TrangThaiLichHen.DaHuy
             && x.ThoiGianBatDau < lichHen.ThoiGianKetThuc
             && x.ThoiGianKetThuc > lichHen.ThoiGianBatDau);
-        if (biTrungLich)
+        // 8.5: khách hàng không được có hai lịch hẹn đã xác nhận trùng khoảng thời gian
+        if (await KiemTraLichHelper.KhachBiTrungLichHen(_context, lichHen.MaTaiKhoan,
+                lichHen.ThoiGianBatDau, lichHen.ThoiGianKetThuc, id))
         {
-            TempData["Loi"] = "Không thể xác nhận vì thú cưng đã có lịch hẹn khác trùng thời gian.";
+            TempData["Loi"] = "Không thể xác nhận vì khách hàng đã có lịch hẹn khác đã xác nhận trùng thời gian.";
             return RedirectToAction(nameof(Index));
         }
-
-        lichHen.TrangThai = HangSo.TrangThaiLichHen.DaXacNhan;
         await _context.SaveChangesAsync();
         TempData["ThongBao"] = "Đã xác nhận lịch hẹn.";
         return RedirectToAction(nameof(Index));

@@ -1,14 +1,17 @@
-﻿
-@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.KetQuaDichVu
+﻿@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.KetQuaDichVu
 
 @{
     ViewData["Title"] = "Ghi nhận kết quả dịch vụ";
-    var caDichVus =
-        ViewBag.CaDichVus as List<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
-        ?? new();
 }
 
 <h2>Ghi nhận kết quả dịch vụ</h2>
+@if (ViewBag.ChuaLienKet == true)
+{
+    <div class="alert alert-warning">
+        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên nên chưa thấy ca nào.
+        Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
+    </div>
+}
 
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
@@ -16,43 +19,74 @@
 
     <div class="mb-3">
         <label asp-for="MaCaDichVu" class="form-label">Ca dịch vụ</label>
-        <select asp-for="MaCaDichVu" class="form-select">
+        <select asp-for="MaCaDichVu" asp-items="ViewBag.CaDichVus" class="form-select" id="MaCaDichVu">
             <option value="">-- Chọn ca --</option>
-            @foreach (var ca in caDichVus)
-            {
-                <option value="@ca.MaCaDichVu">
-                    Ca @ca.MaCaDichVu -
-                    @ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")
-                </option>
-            }
         </select>
         <span asp-validation-for="MaCaDichVu" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="MaKhachHang" class="form-label">Mã khách hàng</label>
-        <input asp-for="MaKhachHang" type="number" min="1"
-               class="form-control" />
+        <label asp-for="MaKhachHang" class="form-label">Khách hàng (đã xác nhận đăng ký)</label>
+        <select asp-for="MaKhachHang" class="form-select" id="MaKhachHang" disabled>
+            <option value="">-- Chọn ca trước --</option>
+        </select>
         <span asp-validation-for="MaKhachHang" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="TrangThaiKetQuaDichVu" class="form-label">
-            Trạng thái kết quả
-        </label>
+        <label asp-for="TrangThaiKetQuaDichVu" class="form-label">Trạng thái kết quả</label>
         <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
             <option value="Chờ thực hiện">Chờ thực hiện</option>
             <option value="Đang thực hiện">Đang thực hiện</option>
             <option value="Hoàn thành">Hoàn thành</option>
-            <option value="Đã hủy">Đã hủy</option>
         </select>
+        <span asp-validation-for="TrangThaiKetQuaDichVu" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="GhiChu" class="form-label">Ghi chú kết quả</label>
+        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
         <textarea asp-for="GhiChu" class="form-control"></textarea>
     </div>
 
     <button type="submit" class="btn btn-primary">Lưu kết quả</button>
     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
 </form>
+
+@section Scripts {
+<script>
+(function () {
+    const caSel = document.getElementById('MaCaDichVu');
+    const khSel = document.getElementById('MaKhachHang');
+    const daChon = '@(Model.MaKhachHang > 0 ? Model.MaKhachHang.ToString() : "")';
+
+    async function taiKhach() {
+        const ma = caSel.value;
+        if (!ma) {
+            khSel.disabled = true;
+            khSel.innerHTML = '<option value="">-- Chọn ca trước --</option>';
+            return;
+        }
+        const res = await fetch('@Url.Action("KhachTheoCa")?maCaDichVu=' + ma);
+        const ds = await res.json();
+
+        if (ds.length === 0) {
+            khSel.disabled = true;
+            khSel.innerHTML = '<option value="">Ca này chưa có khách nào đủ điều kiện</option>';
+            return;
+        }
+        khSel.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
+        ds.forEach(function (k) {
+            const o = document.createElement('option');
+            o.value = k.maTaiKhoan;
+            o.textContent = k.hoTen + ' (' + k.tenDangNhap + ')';
+            if (String(k.maTaiKhoan) === daChon) o.selected = true;
+            khSel.appendChild(o);
+        });
+        khSel.disabled = false;
+    }
+
+    caSel.addEventListener('change', taiKhach);
+    taiKhach();
+})();
+</script>
+}

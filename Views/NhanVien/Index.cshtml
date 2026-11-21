@@ -2,6 +2,14 @@
 
 @{
     ViewData["Title"] = "Quản lý nhân viên";
+    var tenTk = ViewBag.TenTaiKhoan as Dictionary<int, string> ?? new();
+    var chuyenMon = ViewBag.ChuyenMon as Dictionary<int, string> ?? new();
+    var dsChuyenMon = ViewBag.DanhSachChuyenMon as List<string> ?? new List<string>();
+    string? tuKhoa = ViewBag.TuKhoa;
+    string? chuyenMonChon = ViewBag.ChuyenMonChon;
+    string? trangThai = ViewBag.TrangThai;
+    bool chuaLienKet = ViewBag.ChuaLienKet == true;
+    int tongSo = ViewBag.TongSo is int t ? t : Model.Count();
 }
 
 <h2>Quản lý nhân viên</h2>
@@ -13,12 +21,54 @@
 
 <p>
     <a asp-action="Create" class="btn btn-primary">Thêm nhân viên</a>
-    <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">
-        Quản lý ca dịch vụ
-    </a>
-    <a asp-controller="PhanCongNhanVien" asp-action="Index" class="btn btn-secondary">
-        Phân công nhân viên
-    </a>
+    <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">Quản lý ca dịch vụ</a>
+    <a asp-controller="PhanCongNhanVien" asp-action="Index" class="btn btn-secondary">Phân công nhân viên</a>
+</p>
+
+<form method="get" asp-action="Index" class="row g-2 align-items-center mb-3">
+    <div class="col-md-4">
+        <input type="text" name="tuKhoa" value="@tuKhoa" class="form-control"
+               placeholder="Tìm theo mã, họ tên, SĐT, email, tài khoản..." />
+    </div>
+
+    <div class="col-md-3">
+        <select name="chuyenMon" class="form-select">
+            <option value="">-- Tất cả chuyên môn --</option>
+            @foreach (var cm in dsChuyenMon)
+            {
+                <option value="@cm" selected="@(cm == chuyenMonChon)">@cm</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <select name="trangThai" class="form-select">
+            <option value="">-- Mọi trạng thái --</option>
+            <option value="hoat-dong" selected="@(trangThai == "hoat-dong")">Đang hoạt động</option>
+            <option value="ngung" selected="@(trangThai == "ngung")">Ngừng hoạt động</option>
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="chuaLienKet" value="true"
+                   id="chuaLienKet" checked="@chuaLienKet" />
+            <label class="form-check-label" for="chuaLienKet">Chưa liên kết TK</label>
+        </div>
+    </div>
+
+    <div class="col-md-1 d-grid">
+        <button type="submit" class="btn btn-primary">Tìm</button>
+    </div>
+</form>
+
+<p class="text-muted">
+    Hiển thị @Model.Count() / @tongSo nhân viên
+    @if (!string.IsNullOrWhiteSpace(tuKhoa) || !string.IsNullOrWhiteSpace(chuyenMonChon)
+         || !string.IsNullOrWhiteSpace(trangThai) || chuaLienKet)
+    {
+        <a asp-action="Index" class="ms-2">Xóa bộ lọc</a>
+    }
 </p>
 
 <table class="table table-bordered table-striped">
@@ -28,12 +78,19 @@
             <th>Họ tên</th>
             <th>Số điện thoại</th>
             <th>Email</th>
-            <th>Chức vụ</th>
+            <th>Chuyên môn</th>
+            <th>Tài khoản</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
         </tr>
     </thead>
     <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="8" class="text-center text-muted">Không tìm thấy nhân viên phù hợp.</td>
+            </tr>
+        }
         @foreach (var nv in Model)
         {
             <tr>
@@ -41,11 +98,11 @@
                 <td>@nv.HoTen</td>
                 <td>@nv.SoDienThoai</td>
                 <td>@nv.Email</td>
-                <td>@nv.ChucVu</td>
+                <td>@(chuyenMon.TryGetValue(nv.MaNhanVien, out var cm) ? cm : "")</td>
+                <td>@(nv.MaTaiKhoan != null && tenTk.TryGetValue(nv.MaTaiKhoan.Value, out var tenDn) ? tenDn : "Chưa liên kết")</td>
                 <td>@(nv.TrangThai ? "Đang hoạt động" : "Ngừng hoạt động")</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@nv.MaNhanVien"
-                       class="btn btn-sm btn-warning">Sửa</a>
+                    <a asp-action="Edit" asp-route-id="@nv.MaNhanVien" class="btn btn-sm btn-warning">Sửa</a>
 
                     <form asp-action="Delete" asp-route-id="@nv.MaNhanVien"
                           method="post" style="display:inline"
