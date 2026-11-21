@@ -76,6 +76,48 @@ public class TaiKhoanController : Controller
         return RedirectToAction(nameof(DangNhap));
     }
 
+    // ================= ĐĂNG KÝ (khách hàng tự đăng ký) =================
+
+    [HttpGet]
+    public IActionResult DangKy()
+    {
+        if (HttpContext.Session.GetString(HangSo.SessionKey.VaiTro) != null)
+            return RedirectToAction("Index", "Home");
+
+        return View(new DangKyViewModel());
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DangKy(DangKyViewModel model)
+    {
+        model.TenDangNhap = model.TenDangNhap.Trim();
+        model.HoTen = model.HoTen.Trim();
+        var email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();
+
+        if (await _context.TaiKhoan.AnyAsync(t => t.TenDangNhap == model.TenDangNhap))
+            ModelState.AddModelError(nameof(model.TenDangNhap), "Tên đăng nhập đã tồn tại.");
+
+        if (email != null && await _context.TaiKhoan.AnyAsync(t => t.Email == email))
+            ModelState.AddModelError(nameof(model.Email), "Email đã được sử dụng.");
+
+        if (!ModelState.IsValid) return View(model);
+
+        var tk = new TaiKhoan
+        {
+            TenDangNhap = model.TenDangNhap,
+            HoTen = model.HoTen,
+            Email = email,
+            MatKhau = PasswordHasher.Hash(model.MatKhau),
+            VaiTro = HangSo.VaiTro.KhachHang,   // luôn là khách hàng, không cho tự chọn
+            TrangThai = true
+        };
+
+        _context.TaiKhoan.Add(tk);
+        await _context.SaveChangesAsync();
+
+        TempData["ThongBao"] = "Đăng ký thành công. Vui lòng đăng nhập.";
+        return RedirectToAction(nameof(DangNhap));
+    }
     public IActionResult KhongCoQuyen()
     {
         Response.StatusCode = 403;

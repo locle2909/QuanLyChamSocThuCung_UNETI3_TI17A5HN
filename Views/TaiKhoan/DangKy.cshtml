@@ -1,0 +1,80 @@
+﻿@model QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels.DangKyViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng ký - PetCare</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+            body { min-height: 100vh; margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #f8fafc; }
+            .reg-wrap { min-height: 100vh; padding: 2rem; }
+            .reg-card { width: 100%; max-width: 440px; background: #fff; border-radius: 1rem; padding: 2.25rem 2rem; box-shadow: 0 10px 30px rgba(15,23,42,.08); }
+            .reg-card h2 { font-size: 1.6rem; font-weight: 700; color: #0f172a; }
+            .brand { color: #0f766e; font-weight: 700; font-size: 1.3rem; margin-bottom: 1rem; }
+            .form-label { font-weight: 500; color: #334155; font-size: .9rem; }
+            .form-control { padding: .65rem .85rem; border-radius: .5rem; }
+            .form-control:focus { border-color: #14b8a6; box-shadow: 0 0 0 .2rem rgba(20,184,166,.2); }
+            .input-validation-error { border-color: #dc3545; }
+            .btn-pc { background: #0f766e; border-color: #0f766e; color: #fff; padding: .7rem; border-radius: .5rem; font-weight: 600; }
+            .btn-pc:hover { background: #115e59; border-color: #115e59; color: #fff; }
+            .reg-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: .5rem; padding: .6rem .9rem; font-size: .9rem; margin-bottom: 1rem; }
+            .validation-summary-valid { display: none; }
+    </style>
+</head>
+<body>
+    <div class="reg-wrap d-flex align-items-center justify-content-center">
+        <div class="reg-card">
+            <div class="brand">PetCare</div>
+            <h2>Đăng ký tài khoản</h2>
+            <p class="text-muted mb-4">Tạo tài khoản khách hàng để đặt lịch chăm sóc thú cưng.</p>
+
+            <form asp-action="DangKy" method="post">
+                <div asp-validation-summary="ModelOnly" class="reg-error"></div>
+
+                <div class="mb-3">
+                    <label asp-for="HoTen" class="form-label"></label>
+                    <input asp-for="HoTen" class="form-control" autocomplete="name" autofocus />
+                    <span asp-validation-for="HoTen" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="TenDangNhap" class="form-label"></label>
+                    <input asp-for="TenDangNhap" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MatKhau" class="form-label"></label>
+                    <input asp-for="MatKhau" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="XacNhanMatKhau" class="form-label"></label>
+                    <input asp-for="XacNhanMatKhau" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="XacNhanMatKhau" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-pc w-100">Đăng ký</button>
+            </form>
+
+            <div class="text-center mt-3 small">
+                Đã có tài khoản? <a asp-action="DangNhap">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>
