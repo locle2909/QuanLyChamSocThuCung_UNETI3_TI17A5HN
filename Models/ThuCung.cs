@@ -8,9 +8,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
         [Key]
         public int MaThuCung { get; set; }
 
-        [Required(ErrorMessage = "Mã tài khoản bắt buộc nhập")]
-        [StringLength(50)]
-        public string MaTaiKhoan { get; set; } = "";
+        [Display(Name = "Chủ thú cưng")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn khách hàng (chủ thú cưng)")]
+        public int MaTaiKhoan { get; set; }
 
         [Required(ErrorMessage = "Họ tên thú cưng bắt buộc nhập")]
         [StringLength(100)]
@@ -50,6 +50,8 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
         [Required(ErrorMessage = "Trạng thái bắt buộc chọn")]
         [StringLength(30)]
         public string TrangThai { get; set; } = "Hoạt động";
+        [ForeignKey(nameof(MaTaiKhoan))]
+        public TaiKhoan? TaiKhoan { get; set; }
 
         public ICollection<ChuyenMonThuCung> ChuyenMons { get; set; } = new List<ChuyenMonThuCung>();
 

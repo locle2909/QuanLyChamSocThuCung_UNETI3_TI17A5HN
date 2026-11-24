@@ -30,6 +30,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     Module1Seed.Seed(db);   // SV1
     Module3Seed.Seed(db);   // SV3: dịch vụ và gói dịch vụ mẫu
+    Module24Seed.Seed(db);  // SV2 + SV4: thú cưng, thông tin chăm sóc, nhân viên, chuyên môn
     // Module2Seed.Seed(db); // SV2 ... mỗi người thêm một dòng của mình
 }
 

@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
@@ -18,7 +17,6 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             _context = context;
         }
 
-        // 1. Hiển thị danh sách phân công
         // 1. Hiển thị danh sách phân công
         public async Task<IActionResult> Index()
         {
@@ -65,7 +63,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return View(new PhanCongNhanVien());
         }
 
-        // 3. Lấy nhân viên có chuyên môn phù hợp với ca được chọn
+        // 3. Lấy nhân viên phù hợp với ca được chọn:
+        //    đúng chuyên môn + đang hoạt động + không trùng lịch.
+        //    Trả về { lyDo, danhSach } để giao diện báo đúng nguyên nhân khi rỗng.
         [HttpGet]
         [PhanQuyen(HangSo.VaiTro.Admin)]
         public async Task<IActionResult> NhanVienTheoCa(int maCaDichVu)
@@ -73,39 +73,66 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             var ca = await _context.CaDichVu.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaCaDichVu == maCaDichVu);
 
-            if (ca == null || ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
-                return Json(new List<object>());
+            if (ca == null)
+                return KetQuaNhanVien("Ca dịch vụ không tồn tại.");
+
+            if (ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
+                return KetQuaNhanVien(
+                    "Ca này đang ở trạng thái \"" + ca.TrangThai +
+                    "\", chỉ phân công được cho ca \"" +
+                    HangSo.TrangThaiCaDichVu.DaLenLich + "\".");
 
             var dichVu = await _context.DichVus.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaDichVu == ca.MaDichVu);
             if (dichVu == null)
-                return Json(new List<object>());
+                return KetQuaNhanVien("Không tìm thấy dịch vụ của ca này (Dịch vụ " + ca.MaDichVu + ").");
 
-            var nhom = dichVu.NhomDichVu.Trim();
-            var maThuCung = ca.MaThuCung;
+            var nhom = dichVu.NhomDichVu;
 
-            // Thú cưng của ca phải có thông tin chăm sóc hiệu lực đúng loại dịch vụ
-            bool thuCungDung = await (
-                from cm in _context.ChuyenMonThuCungs
-                join l in _context.LoaiDichVu on cm.MaLoaiDichVu equals l.MaLoaiDichVu
-                where cm.MaThuCung == maThuCung
-                      && cm.TrangThai == HangSo.TrangThaiChuyenMon.HieuLuc
-                      && l.TrangThai
-                      && l.NhomDichVu == nhom
-                select cm.MaChuyenMon).AnyAsync();
-            if (!thuCungDung)
-                return Json(new List<object>());
+            // Thú cưng của ca phải có thông tin chăm sóc hiệu lực đúng nhóm dịch vụ
+            if (!await ThuCungDungNhomAsync(ca.MaThuCung, nhom))
+                return KetQuaNhanVien(
+                    "Thú cưng " + ca.MaThuCung + " chưa có thông tin chăm sóc đang hiệu lực " +
+                    "thuộc nhóm \"" + nhom + "\". Hãy thêm ở mục \"Thông tin chăm sóc\".");
 
-            var danhSach = await _context.NhanVien
-                .Where(nv => nv.TrangThai &&
-                             _context.ChuyenMonNhanVien.Any(cm =>
-                                 cm.MaNhanVien == nv.MaNhanVien &&
-                                 cm.TenChuyenMon.Trim() == nhom))
-                .OrderBy(nv => nv.HoTen)
-                .Select(nv => new { nv.MaNhanVien, nv.HoTen })
-                .ToListAsync();
+            // Nhân viên đang hoạt động và có chuyên môn đúng nhóm
+            var nhanVienDungNhom = await LayNhanVienDungChuyenMonAsync(nhom);
+            if (nhanVienDungNhom.Count == 0)
+                return KetQuaNhanVien(
+                    "Chưa có nhân viên đang hoạt động nào có chuyên môn \"" + nhom +
+                    "\". Hãy thêm chuyên môn ở mục \"Nhân viên\".");
 
-            return Json(danhSach);
+            // Loại những nhân viên đã có phân công giao thời gian với ca này
+            var maNhanViens = nhanVienDungNhom.Select(n => n.MaNhanVien).ToList();
+
+            var maBiTrung = await (
+                from pcCu in _context.PhanCongNhanVien
+                join caCu in _context.CaDichVu on pcCu.MaCaDichVu equals caCu.MaCaDichVu
+                where maNhanViens.Contains(pcCu.MaNhanVien)
+                      && pcCu.MaCaDichVu != ca.MaCaDichVu
+                      && pcCu.TrangThai != HangSo.TrangThaiPhanCong.DaHuy
+                      && pcCu.TrangThai != HangSo.TrangThaiPhanCong.HoanThanh
+                      && caCu.TrangThai != HangSo.TrangThaiCaDichVu.DaHuy
+                      && caCu.TrangThai != HangSo.TrangThaiCaDichVu.DaHoanThanh
+                      && caCu.ThoiGianBatDau < ca.ThoiGianKetThuc
+                      && caCu.ThoiGianKetThuc > ca.ThoiGianBatDau
+                select pcCu.MaNhanVien
+            ).Distinct().ToListAsync();
+
+            var danhSach = nhanVienDungNhom
+                .Where(n => !maBiTrung.Contains(n.MaNhanVien))
+                .OrderBy(n => n.HoTen)
+                .Select(n => new { n.MaNhanVien, n.HoTen })
+                .ToList();
+
+            if (danhSach.Count == 0)
+                return KetQuaNhanVien(
+                    "Có " + nhanVienDungNhom.Count + " nhân viên đúng chuyên môn \"" + nhom +
+                    "\" nhưng tất cả đều đã có ca trùng thời gian " +
+                    ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm") + " - " +
+                    ca.ThoiGianKetThuc.ToString("HH:mm") + ".");
+
+            return Json(new { lyDo = (string?)null, danhSach });
         }
 
         // 4. Xử lý tạo phân công
@@ -308,27 +335,73 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             if (dichVu == null)
                 return "Không tìm thấy dịch vụ của ca này.";
 
-            var nhom = dichVu.NhomDichVu.Trim();
+            var nhom = dichVu.NhomDichVu;
 
-            bool nhanVienDung = await _context.ChuyenMonNhanVien.AnyAsync(x =>
-                x.MaNhanVien == maNhanVien && x.TenChuyenMon.Trim() == nhom);
+            var nhanVienDung = (await LayNhanVienDungChuyenMonAsync(nhom))
+                .Any(n => n.MaNhanVien == maNhanVien);
             if (!nhanVienDung)
                 return "Nhân viên không có chuyên môn phù hợp với dịch vụ này.";
 
-            var maThuCung = ca.MaThuCung;
-            bool thuCungDung = await (
-                from cm in _context.ChuyenMonThuCungs
-                join l in _context.LoaiDichVu on cm.MaLoaiDichVu equals l.MaLoaiDichVu
-                where cm.MaThuCung == maThuCung
-                      && cm.TrangThai == HangSo.TrangThaiChuyenMon.HieuLuc
-                      && l.TrangThai
-                      && l.NhomDichVu == nhom
-                select cm.MaChuyenMon).AnyAsync();
-            if (!thuCungDung)
+            if (!await ThuCungDungNhomAsync(ca.MaThuCung, nhom))
                 return "Thú cưng chưa có thông tin chăm sóc đang hiệu lực đúng loại dịch vụ này.";
 
             return null;
         }
+
+        // Chuẩn hóa chuỗi nhóm dịch vụ để so khớp: bỏ khoảng trắng thừa,
+        // đồng nhất các loại dấu gạch, không phân biệt hoa/thường.
+        private static string ChuanHoaNhom(string? chuoi)
+        {
+            if (string.IsNullOrWhiteSpace(chuoi)) return string.Empty;
+
+            var s = chuoi
+                .Replace('\u2013', '-')   // en dash
+                .Replace('\u2014', '-')   // em dash
+                .Replace('\u2212', '-');  // minus
+            s = System.Text.RegularExpressions.Regex.Replace(s, @"\s*-\s*", "-");
+            s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ");
+            return s.Trim().ToLowerInvariant();
+        }
+
+        // Nhân viên đang hoạt động có chuyên môn thuộc nhóm dịch vụ.
+        private async Task<List<NhanVien>> LayNhanVienDungChuyenMonAsync(string nhom)
+        {
+            var nhomChuan = ChuanHoaNhom(nhom);
+
+            var nhanViens = await _context.NhanVien.AsNoTracking()
+                .Where(nv => nv.TrangThai)
+                .ToListAsync();
+
+            var chuyenMons = await _context.ChuyenMonNhanVien.AsNoTracking()
+                .Select(cm => new { cm.MaNhanVien, cm.TenChuyenMon })
+                .ToListAsync();
+
+            var maDung = chuyenMons
+                .Where(cm => ChuanHoaNhom(cm.TenChuyenMon) == nhomChuan)
+                .Select(cm => cm.MaNhanVien)
+                .ToHashSet();
+
+            return nhanViens.Where(nv => maDung.Contains(nv.MaNhanVien)).ToList();
+        }
+
+        // Thú cưng có thông tin chăm sóc hiệu lực, loại dịch vụ hoạt động, đúng nhóm.
+        private async Task<bool> ThuCungDungNhomAsync(int maThuCung, string nhom)
+        {
+            var nhomChuan = ChuanHoaNhom(nhom);
+
+            var cacNhom = await (
+                from cm in _context.ChuyenMonThuCungs.AsNoTracking()
+                join l in _context.LoaiDichVu.AsNoTracking() on cm.MaLoaiDichVu equals l.MaLoaiDichVu
+                where cm.MaThuCung == maThuCung
+                      && cm.TrangThai == HangSo.TrangThaiChuyenMon.HieuLuc
+                      && l.TrangThai
+                select l.NhomDichVu).ToListAsync();
+
+            return cacNhom.Any(n => ChuanHoaNhom(n) == nhomChuan);
+        }
+
+        private JsonResult KetQuaNhanVien(string lyDo) =>
+            Json(new { lyDo, danhSach = new List<object>() });
 
         // 6. Nạp danh sách lựa chọn cho giao diện
         private async Task NapDanhSachLuaChon()
