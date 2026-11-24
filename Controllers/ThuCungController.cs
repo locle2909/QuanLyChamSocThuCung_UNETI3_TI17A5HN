@@ -103,8 +103,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return View(item);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            await NapKhachHangAsync();
             return View(new ThuCung { NgaySinh = DateTime.Today });
         }
 
@@ -114,6 +115,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         {
             model.Tuoi = CalculateAge(model.NgaySinh);
 
+            if (!await _context.TaiKhoan.AnyAsync(t => t.MaTaiKhoan == model.MaTaiKhoan
+                    && t.VaiTro == HangSo.VaiTro.KhachHang && t.TrangThai))
+                ModelState.AddModelError(nameof(model.MaTaiKhoan), "Chủ thú cưng phải là tài khoản khách hàng đang hoạt động.");
+
             if (await _context.ThuCungs.AnyAsync(x => x.Email == model.Email))
                 ModelState.AddModelError(nameof(model.Email), "Email đã tồn tại.");
 
@@ -121,7 +126,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 ModelState.AddModelError(nameof(model.SoDienThoai), "Số điện thoại đã tồn tại.");
 
             if (!ModelState.IsValid)
+            {
+                await NapKhachHangAsync(model.MaTaiKhoan);
                 return View(model);
+            }
 
             _context.ThuCungs.Add(model);
             await _context.SaveChangesAsync();
@@ -134,6 +142,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             if (id == null) return NotFound();
             var item = await _context.ThuCungs.FindAsync(id);
             if (item == null) return NotFound();
+            await NapKhachHangAsync(item.MaTaiKhoan);
             return View(item);
         }
 
@@ -145,6 +154,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 
             model.Tuoi = CalculateAge(model.NgaySinh);
 
+            if (!await _context.TaiKhoan.AnyAsync(t => t.MaTaiKhoan == model.MaTaiKhoan
+                    && t.VaiTro == HangSo.VaiTro.KhachHang))
+                ModelState.AddModelError(nameof(model.MaTaiKhoan), "Chủ thú cưng phải là tài khoản khách hàng.");
+
             if (await _context.ThuCungs.AnyAsync(x => x.MaThuCung != id && x.Email == model.Email))
                 ModelState.AddModelError(nameof(model.Email), "Email đã tồn tại.");
 
@@ -152,7 +165,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 ModelState.AddModelError(nameof(model.SoDienThoai), "Số điện thoại đã tồn tại.");
 
             if (!ModelState.IsValid)
+            {
+                await NapKhachHangAsync(model.MaTaiKhoan);
                 return View(model);
+            }
 
             var old = await _context.ThuCungs.FindAsync(id);
             if (old == null) return NotFound();
@@ -174,14 +190,6 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-            var item = await _context.ThuCungs.AsNoTracking().FirstOrDefaultAsync(x => x.MaThuCung == id);
-            if (item == null) return NotFound();
-            return View(item);
-        }
-
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -189,7 +197,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             var item = await _context.ThuCungs.FindAsync(id);
             if (item == null) return NotFound();
 
-            var hasHistory = await _context.ChuyenMonThuCungs.AnyAsync(x => x.MaThuCung == id);
+            var hasHistory = await _context.ChuyenMonThuCungs.AnyAsync(x => x.MaThuCung == id)
+                || await _context.LichHen.AnyAsync(x => x.MaThuCung == id)
+                || await _context.CaDichVu.AnyAsync(x => x.MaThuCung == id);
             if (hasHistory)
             {
                 TempData["Error"] = "Không thể xóa thú cưng vì đã có lịch sử phân công/lịch phục vụ.";
@@ -200,6 +210,16 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             await _context.SaveChangesAsync();
             TempData["Success"] = "Xóa thú cưng thành công.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task NapKhachHangAsync(int? chon = null)
+        {
+            var ds = await _context.TaiKhoan.AsNoTracking()
+                .Where(t => t.VaiTro == HangSo.VaiTro.KhachHang && (t.TrangThai || t.MaTaiKhoan == chon))
+                .OrderBy(t => t.HoTen)
+                .Select(t => new { t.MaTaiKhoan, Ten = t.HoTen + " (" + t.TenDangNhap + ")" })
+                .ToListAsync();
+            ViewBag.KhachHangs = new SelectList(ds, "MaTaiKhoan", "Ten", chon);
         }
 
         private static int CalculateAge(DateTime birthday)

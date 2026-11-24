@@ -1,11 +1,12 @@
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
+using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
-using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Helpers;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
@@ -112,7 +113,7 @@ public class LichHenController : Controller
 
         var thuCung = await _context.ThuCungs
             .FirstOrDefaultAsync(x => x.MaThuCung == model.MaThuCung
-                && x.MaTaiKhoan == maTaiKhoan.ToString()
+                && x.MaTaiKhoan == maTaiKhoan && x.MaTaiKhoan == maTaiKhoan
                 && x.TrangThai == "Hoạt động");
         if (thuCung == null)
             ModelState.AddModelError(nameof(model.MaThuCung), "Thú cưng không tồn tại, không thuộc tài khoản của bạn hoặc đã ngừng hoạt động.");
@@ -152,8 +153,10 @@ public class LichHenController : Controller
             NgayTao = DateTime.Now
         });
         await _context.SaveChangesAsync();
-
-        TempData["ThongBao"] = "Đã gửi yêu cầu đặt lịch. Vui lòng theo dõi trạng thái xác nhận.";
+        TempData["ThongBao"] = "Đã đặt lịch hẹn, vui lòng chờ xác nhận.";
+        return RedirectToAction(nameof(Index));
+        await _context.SaveChangesAsync();
+        TempData["ThongBao"] = "Đã xác nhận lịch hẹn.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -178,9 +181,15 @@ public class LichHenController : Controller
         var biTrungLich = await _context.LichHen.AnyAsync(x =>
             x.MaLichHen != id
             && x.MaThuCung == lichHen.MaThuCung
-            && x.TrangThai != HangSo.TrangThaiLichHen.DaHuy
+            && x.TrangThai == HangSo.TrangThaiLichHen.DaXacNhan
             && x.ThoiGianBatDau < lichHen.ThoiGianKetThuc
             && x.ThoiGianKetThuc > lichHen.ThoiGianBatDau);
+                if (biTrungLich)
+                {
+                    TempData["Loi"] = "Không thể xác nhận vì thú cưng đã có lịch hẹn khác đã xác nhận trùng thời gian.";
+                    return RedirectToAction(nameof(Index));
+        }
+
         // 8.5: khách hàng không được có hai lịch hẹn đã xác nhận trùng khoảng thời gian
         if (await KiemTraLichHelper.KhachBiTrungLichHen(_context, lichHen.MaTaiKhoan,
                 lichHen.ThoiGianBatDau, lichHen.ThoiGianKetThuc, id))
@@ -188,6 +197,8 @@ public class LichHenController : Controller
             TempData["Loi"] = "Không thể xác nhận vì khách hàng đã có lịch hẹn khác đã xác nhận trùng thời gian.";
             return RedirectToAction(nameof(Index));
         }
+
+        lichHen.TrangThai = HangSo.TrangThaiLichHen.DaXacNhan;
         await _context.SaveChangesAsync();
         TempData["ThongBao"] = "Đã xác nhận lịch hẹn.";
         return RedirectToAction(nameof(Index));
@@ -261,9 +272,9 @@ public class LichHenController : Controller
 
     private async Task NapLuaChon(int maTaiKhoan)
     {
-        var maTaiKhoanChuoi = maTaiKhoan.ToString();
+        
         var thuCungs = await _context.ThuCungs.AsNoTracking()
-            .Where(x => x.MaTaiKhoan == maTaiKhoanChuoi && x.TrangThai == "Hoạt động")
+            .Where(x => x.MaTaiKhoan == maTaiKhoan && x.TrangThai == "Hoạt động")
             .OrderBy(x => x.HoTen)
             .Select(x => new { x.MaThuCung, x.HoTen })
             .ToListAsync();

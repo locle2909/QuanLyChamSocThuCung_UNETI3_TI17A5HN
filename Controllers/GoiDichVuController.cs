@@ -7,7 +7,7 @@ using QuanLyChamSocThuCung_UNETI3_TI17A5HN.ViewModels;
 
 namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers;
 
-[PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien, HangSo.VaiTro.KhachHang)]
+[PhanQuyen(HangSo.VaiTro.Admin)]
 public class GoiDichVuController : Controller
 {
     private readonly AppDbContext _context;

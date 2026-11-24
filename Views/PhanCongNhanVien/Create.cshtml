@@ -161,7 +161,8 @@
                     throw new Error("Không thể tải danh sách nhân viên.");
                 }
 
-                const danhSach = await response.json();
+                        const ketQua = await response.json();
+                        const danhSach = ketQua.danhSach || [];
 
                 // Xóa thông báo tải.
                 timKiemNhanVien.clear(true);
@@ -176,8 +177,9 @@
                     timKiemNhanVien.refreshOptions(false);
                     timKiemNhanVien.disable();
 
-                    thongBao.textContent =
-                        "Không có nhân viên vừa đúng chuyên môn vừa không trùng lịch.";
+                        thongBao.textContent =
+        ketQua.lyDo ||
+        "Không có nhân viên vừa đúng chuyên môn vừa không trùng lịch.";
 
                     return;
                 }

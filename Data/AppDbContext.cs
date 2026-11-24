@@ -104,5 +104,36 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.MaLichHen)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ===== Khóa ngoại bổ sung (mục 10 của đề) =====
+        modelBuilder.Entity<ThuCung>()
+            .HasOne(x => x.TaiKhoan).WithMany()
+            .HasForeignKey(x => x.MaTaiKhoan)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<LichHen>().HasOne<TaiKhoan>().WithMany()
+            .HasForeignKey(x => x.MaTaiKhoan).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<LichHen>().HasOne<ThuCung>().WithMany()
+            .HasForeignKey(x => x.MaThuCung).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<LichHen>().HasOne<DichVu>().WithMany()
+            .HasForeignKey(x => x.MaDichVu).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<CaDichVu>().HasOne<DichVu>().WithMany()
+            .HasForeignKey(x => x.MaDichVu).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<CaDichVu>().HasOne<ThuCung>().WithMany()
+            .HasForeignKey(x => x.MaThuCung).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PhanCongNhanVien>().HasOne<NhanVien>().WithMany()
+            .HasForeignKey(x => x.MaNhanVien).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<PhanCongNhanVien>().HasOne<CaDichVu>().WithMany()
+            .HasForeignKey(x => x.MaCaDichVu).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<KetQuaDichVu>().HasOne<CaDichVu>().WithMany()
+            .HasForeignKey(x => x.MaCaDichVu).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<KetQuaDichVu>().HasOne<TaiKhoan>().WithMany()
+            .HasForeignKey(x => x.MaKhachHang).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChuyenMonNhanVien>().HasOne<NhanVien>().WithMany()
+            .HasForeignKey(x => x.MaNhanVien).OnDelete(DeleteBehavior.Restrict);
     }
 }
