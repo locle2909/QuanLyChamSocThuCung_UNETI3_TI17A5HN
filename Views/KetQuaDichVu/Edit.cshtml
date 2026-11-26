@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Sửa kết quả dịch vụ";
     bool caDaHoanThanh = ViewBag.CaDaHoanThanh == true;
+    bool khoaTrangThai = ViewBag.KhoaTrangThai == true;
 }
 
 <h2>Sửa kết quả dịch vụ</h2>
@@ -10,7 +11,15 @@
 @if (caDaHoanThanh)
 {
     <div class="alert alert-warning">
-        Ca đã hoàn thành. Chỉ Admin được sửa và bắt buộc ghi lý do vào ghi chú.
+        Ca đã hoàn thành. Chỉ Admin được sửa, chỉ sửa được ghi chú (không đổi trạng thái kết quả)
+        và bắt buộc ghi lý do vào ghi chú nội bộ. Lần sửa sẽ được lưu trong lịch sử.
+    </div>
+}
+else if (khoaTrangThai)
+{
+    <div class="alert alert-info">
+        Kết quả đã được đề xuất hoàn thành hoặc đã được khách hàng xác nhận nên không đổi được trạng thái.
+        Bạn vẫn sửa được ghi chú.
     </div>
 }
 
@@ -22,22 +31,40 @@
 
 <form asp-action="Edit" asp-route-id="@Model.MaKetQuaDichVu" method="post">
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
         <label asp-for="TrangThaiKetQuaDichVu" class="form-label">Trạng thái kết quả</label>
-        <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
-            <option value="Chờ thực hiện">Chờ thực hiện</option>
-            <option value="Đang thực hiện">Đang thực hiện</option>
-            <option value="Hoàn thành">Hoàn thành</option>
-        </select>
+        @if (khoaTrangThai)
+        {
+            <input class="form-control" value="@Model.TrangThaiKetQuaDichVu" disabled />
+        }
+        else
+        {
+            <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
+                <option value="Chờ thực hiện">Chờ thực hiện</option>
+                <option value="Đang thực hiện">Đang thực hiện</option>
+            </select>
+            <div class="form-text">
+                Khi thực hiện xong, hãy dùng nút "Đề xuất hoàn thành" ở trang danh sách.
+                Kết quả chỉ chuyển sang Hoàn thành khi khách hàng xác nhận.
+            </div>
+        }
         <span asp-validation-for="TrangThaiKetQuaDichVu" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="GhiChu" class="form-label">Ghi chú @(caDaHoanThanh ? "(lý do sửa - bắt buộc)" : "")</label>
+        <label asp-for="GhiChu" class="form-label">Ghi chú cho khách hàng (khách hàng sẽ thấy)</label>
         <textarea asp-for="GhiChu" class="form-control"></textarea>
         <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChuNoiBo" class="form-label">
+            Ghi chú nội bộ (khách hàng không thấy) @(caDaHoanThanh ? "- bắt buộc ghi lý do sửa" : "")
+        </label>
+        <textarea asp-for="GhiChuNoiBo" class="form-control"></textarea>
+        <span asp-validation-for="GhiChuNoiBo" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Cập nhật</button>

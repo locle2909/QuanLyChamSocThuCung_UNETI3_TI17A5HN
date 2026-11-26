@@ -2,14 +2,23 @@
 
 @{
     ViewData["Title"] = "Sửa ca dịch vụ";
+    bool coLichHen = Model.MaLichHen != null;
 }
 
 <h2>Sửa ca dịch vụ</h2>
 
+@if (coLichHen)
+{
+    <div class="alert alert-info">
+        Ca này tạo từ lịch hẹn #@Model.MaLichHen (khách: @ViewBag.TenKhachHang).
+        Dịch vụ, thú cưng và thời gian do lịch hẹn quyết định nên không sửa được, chỉ sửa phòng và ghi chú.
+    </div>
+}
+
 <form asp-action="Edit" asp-route-id="@Model.MaCaDichVu" method="post">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="MaCaDichVu" />
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div asp-validation-summary="All" class="text-danger"></div>
 
     <div class="mb-3">
         <label class="form-label">Dịch vụ</label>
@@ -23,20 +32,19 @@
 
     <div class="mb-3">
         <label asp-for="ThoiGianBatDau" class="form-label">Bắt đầu</label>
-        <input asp-for="ThoiGianBatDau" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
-        <span asp-validation-for="ThoiGianBatDau" class="text-danger"></span>
+        <input asp-for="ThoiGianBatDau" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}"
+               class="form-control" disabled="@coLichHen" />
     </div>
 
     <div class="mb-3">
         <label asp-for="ThoiGianKetThuc" class="form-label">Kết thúc</label>
-        <input asp-for="ThoiGianKetThuc" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
-        <span asp-validation-for="ThoiGianKetThuc" class="text-danger"></span>
+        <input asp-for="ThoiGianKetThuc" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}"
+               class="form-control" disabled="@coLichHen" />
     </div>
 
     <div class="mb-3">
         <label asp-for="PhongHocHoacHinhThuc" class="form-label">Phòng / hình thức</label>
         <input asp-for="PhongHocHoacHinhThuc" class="form-control" />
-        <span asp-validation-for="PhongHocHoacHinhThuc" class="text-danger"></span>
     </div>
 
     <div class="mb-3">

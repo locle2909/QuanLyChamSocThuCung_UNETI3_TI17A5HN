@@ -1,10 +1,11 @@
-﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
 @model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
 
 @{
     ViewData["Title"] = "Quản lý ca dịch vụ";
     var tenDv = ViewBag.DsTenDichVu as Dictionary<int, string> ?? new();
     var tenTc = ViewBag.DsTenThuCung as Dictionary<int, string> ?? new();
+    var tenKhach = ViewBag.TenKhachTheoLichHen as Dictionary<int, string> ?? new();
     var laAdmin = Context.Session.GetString(HangSo.SessionKey.VaiTro) == HangSo.VaiTro.Admin;
 }
 
@@ -21,7 +22,7 @@
 @if (ViewBag.ChuaLienKet == true)
 {
     <div class="alert alert-warning">
-        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên nên chưa thấy ca nào.
+        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên đang hoạt động nên chưa thấy ca nào.
         Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
     </div>
 }
@@ -29,16 +30,49 @@
 <p>
     @if (laAdmin)
     {
-        <a asp-action="Create" class="btn btn-primary">Tạo ca dịch vụ</a>
+        <a asp-action="Create" class="btn btn-primary">Tạo ca từ lịch hẹn</a>
     }
     <a asp-controller="PhanCongNhanVien" asp-action="Index" class="btn btn-secondary">Phân công</a>
     <a asp-controller="KetQuaDichVu" asp-action="Index" class="btn btn-secondary">Kết quả dịch vụ</a>
 </p>
 
+<form method="get" asp-action="Index" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control"
+                   placeholder="Mã ca, mã lịch hẹn, khách hàng, dịch vụ, thú cưng..." />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Trạng thái</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đã lên lịch" selected="@((string?)ViewBag.TrangThai == "Đã lên lịch")">Đã lên lịch</option>
+                <option value="Đã hoàn thành" selected="@((string?)ViewBag.TrangThai == "Đã hoàn thành")">Đã hoàn thành</option>
+                <option value="Đã hủy" selected="@((string?)ViewBag.TrangThai == "Đã hủy")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </div>
+</form>
+
 <table class="table table-bordered table-striped align-middle">
     <thead>
         <tr>
             <th>Mã ca</th>
+            <th>Lịch hẹn</th>
+            <th>Khách hàng</th>
             <th>Dịch vụ</th>
             <th>Thú cưng</th>
             <th>Bắt đầu</th>
@@ -49,41 +83,41 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var ca in Model)
-        {
-            <tr>
-                <td>@ca.MaCaDichVu</td>
-                <td>@(tenDv.TryGetValue(ca.MaDichVu, out var d) ? d : "#" + ca.MaDichVu)</td>
-                <td>@(tenTc.TryGetValue(ca.MaThuCung, out var t) ? t : "#" + ca.MaThuCung)</td>
-                <td>@ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@ca.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@ca.PhongHocHoacHinhThuc</td>
-                <td>@ca.TrangThai</td>
-                <td class="text-nowrap">
-                    @if (ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich)
-                    {
-                        if (laAdmin)
-                        {
-                            <a asp-action="Edit" asp-route-id="@ca.MaCaDichVu" class="btn btn-sm btn-warning">Sửa</a>
-                        }
+    @if (!Model.Any())
+    {
+        <tr><td colspan="10" class="text-center text-muted">Không tìm thấy ca dịch vụ phù hợp.</td></tr>
+    }
+    @foreach (var ca in Model)
+    {
+        <tr>
+            <td>@ca.MaCaDichVu</td>
+            <td>@(ca.MaLichHen?.ToString() ?? "—")</td>
+            <td>@(ca.MaLichHen != null && tenKhach.TryGetValue(ca.MaLichHen.Value, out var k) ? k : "—")</td>
+            <td>@(tenDv.TryGetValue(ca.MaDichVu, out var d) ? d : "#" + ca.MaDichVu)</td>
+            <td>@(tenTc.TryGetValue(ca.MaThuCung, out var t) ? t : "#" + ca.MaThuCung)</td>
+            <td>@ca.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@ca.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@ca.PhongHocHoacHinhThuc</td>
+            <td>@ca.TrangThai</td>
+            <td class="text-nowrap">
+                @if (laAdmin && ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich)
+                {
+                    <a asp-action="Edit" asp-route-id="@ca.MaCaDichVu" class="btn btn-sm btn-warning">Sửa</a>
 
-                        <form asp-action="HoanThanh" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
-                              onsubmit="return confirm('Hoàn thành ca này?');">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-sm btn-success" type="submit">Hoàn thành</button>
-                        </form>
+                    <form asp-action="HoanThanh" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
+                          onsubmit="return confirm('Hoàn thành ca này? Mọi kết quả phải đã được khách hàng xác nhận.');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-success" type="submit">Hoàn thành</button>
+                    </form>
 
-                        if (laAdmin)
-                        {
-                            <form asp-action="Huy" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
-                                  onsubmit="return confirm('Hủy ca này?');">
-                                @Html.AntiForgeryToken()
-                                <button class="btn btn-sm btn-danger" type="submit">Hủy ca</button>
-                            </form>
-                        }
-                    }
-                </td>
-            </tr>
-        }
+                    <form asp-action="Huy" asp-route-id="@ca.MaCaDichVu" method="post" class="d-inline"
+                          onsubmit="return confirm('Hủy ca này?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-danger" type="submit">Hủy ca</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
     </tbody>
 </table>

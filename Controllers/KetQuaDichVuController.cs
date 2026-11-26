@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
@@ -11,11 +11,12 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
     [PhanQuyen(HangSo.VaiTro.Admin, HangSo.VaiTro.NhanVien)]
     public class KetQuaDichVuController : Controller
     {
+        // Trạng thái được chọn tay. "Chờ khách xác nhận" và "Hoàn thành" chỉ đi qua
+        // luồng đề xuất (nhân viên) và xác nhận (khách hàng).
         private static readonly string[] TrangThaiHopLe =
         {
             HangSo.TrangThaiKetQua.ChoThucHien,
-            HangSo.TrangThaiKetQua.DangThucHien,
-            HangSo.TrangThaiKetQua.HoanThanh
+            HangSo.TrangThaiKetQua.DangThucHien
         };
 
         private readonly AppDbContext _context;
@@ -25,25 +26,12 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             _context = context;
         }
 
-        private bool LaAdmin =>
-            HttpContext.Session.GetString(HangSo.SessionKey.VaiTro) == HangSo.VaiTro.Admin;
+        private bool LaAdmin => HttpContext.LaAdmin();
 
-        private int MaTaiKhoanHienTai =>
-            HttpContext.Session.GetInt32(HangSo.SessionKey.MaTaiKhoan) ?? 0;
+        private int MaTaiKhoanHienTai => HttpContext.LayMaTaiKhoan();
 
-        // ===== Giới hạn theo phân công (chỉ áp dụng cho tài khoản Nhân viên) =====
-
-        // Các ca mà nhân viên đang đăng nhập được phân công (phân công chưa hủy)
-        private IQueryable<int> CaCuaToi()
-        {
-            var maTk = MaTaiKhoanHienTai;
-            return from pc in _context.PhanCongNhanVien
-                   join nv in _context.NhanVien on pc.MaNhanVien equals nv.MaNhanVien
-                   where nv.MaTaiKhoan == maTk
-                         && nv.TrangThai
-                         && pc.TrangThai != HangSo.TrangThaiPhanCong.DaHuy
-                   select pc.MaCaDichVu;
-        }
+        // Các ca mà nhân viên đang đăng nhập được phân công
+        private IQueryable<int> CaCuaToi() => _context.CaCuaNhanVien(MaTaiKhoanHienTai);
 
         private async Task<bool> DuocPhanCongVaoCa(int maCa)
         {
@@ -51,16 +39,19 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return await CaCuaToi().AnyAsync(c => c == maCa);
         }
 
-        private async Task<bool> DaLienKetNhanVien()
+        private static string GhiThem(string? cu, string them)
         {
-            var maTk = MaTaiKhoanHienTai;
-            return await _context.NhanVien.AnyAsync(n => n.MaTaiKhoan == maTk && n.TrangThai);
+            return string.IsNullOrWhiteSpace(cu) ? them : cu + "\n" + them;
         }
 
         // ===== Danh sách =====
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? tuKhoa, string? trangThai, DateTime? tuNgay, DateTime? denNgay)
         {
+            ViewBag.TuKhoa = tuKhoa;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
             var laAdmin = LaAdmin;
 
             var query = from kq in _context.KetQuaDichVu.AsNoTracking()
@@ -71,12 +62,30 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             {
                 var caCuaToi = CaCuaToi();
                 query = query.Where(x => caCuaToi.Contains(x.ca.MaCaDichVu));
-                ViewBag.ChuaLienKet = !await DaLienKetNhanVien();
+                ViewBag.ChuaLienKet = !await _context.CoHoSoNhanVienHopLe(MaTaiKhoanHienTai);
             }
+
+            if (!string.IsNullOrWhiteSpace(tuKhoa))
+            {
+                var kw = tuKhoa.Trim();
+                var coMa = int.TryParse(kw, out var ma);
+                query = query.Where(x =>
+                    (coMa && (x.kq.MaKetQuaDichVu == ma || x.ca.MaCaDichVu == ma))
+                    || _context.TaiKhoan.Any(t => t.MaTaiKhoan == x.kq.MaKhachHang && t.HoTen.Contains(kw))
+                    || _context.DichVus.Any(d => d.MaDichVu == x.ca.MaDichVu && d.TenDichVu.Contains(kw))
+                    || _context.ThuCungs.Any(t => t.MaThuCung == x.ca.MaThuCung && t.HoTen.Contains(kw)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trangThai))
+                query = query.Where(x => x.kq.TrangThaiKetQuaDichVu == trangThai);
+            if (tuNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau >= tuNgay.Value.Date);
+            if (denNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau < denNgay.Value.Date.AddDays(1));
 
             var rows = await query.OrderByDescending(x => x.kq.ThoiGianGhiNhan).ToListAsync();
 
-            var tenKhach = await _context.TaiKhoan.AsNoTracking().ToDictionaryAsync(x => x.MaTaiKhoan, x => x.HoTen);
+            var tenTaiKhoan = await _context.TaiKhoan.AsNoTracking().ToDictionaryAsync(x => x.MaTaiKhoan, x => x.HoTen);
             var tenDv = await _context.DichVus.AsNoTracking().ToDictionaryAsync(x => x.MaDichVu, x => x.TenDichVu);
             var tenTc = await _context.ThuCungs.AsNoTracking().ToDictionaryAsync(x => x.MaThuCung, x => x.HoTen);
 
@@ -85,7 +94,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 MaKetQuaDichVu = x.kq.MaKetQuaDichVu,
                 MaCaDichVu = x.ca.MaCaDichVu,
                 MaKhachHang = x.kq.MaKhachHang,
-                TenKhachHang = tenKhach.GetValueOrDefault(x.kq.MaKhachHang, "#" + x.kq.MaKhachHang),
+                TenKhachHang = tenTaiKhoan.GetValueOrDefault(x.kq.MaKhachHang, "#" + x.kq.MaKhachHang),
                 TenDichVu = tenDv.GetValueOrDefault(x.ca.MaDichVu, "#" + x.ca.MaDichVu),
                 TenThuCung = tenTc.GetValueOrDefault(x.ca.MaThuCung, "#" + x.ca.MaThuCung),
                 ThoiGianBatDau = x.ca.ThoiGianBatDau,
@@ -93,16 +102,26 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 TrangThai = x.kq.TrangThaiKetQuaDichVu,
                 ThoiGianGhiNhan = x.kq.ThoiGianGhiNhan,
                 GhiChu = x.kq.GhiChu,
+                GhiChuNoiBo = x.kq.GhiChuNoiBo,
+                TenNguoiCapNhat = x.kq.MaNguoiCapNhat != null
+                    ? tenTaiKhoan.GetValueOrDefault(x.kq.MaNguoiCapNhat.Value, "#" + x.kq.MaNguoiCapNhat.Value)
+                    : "",
+                ThoiGianDeXuatHoanThanh = x.kq.ThoiGianDeXuatHoanThanh,
+                ThoiGianKhachXacNhanHoanThanh = x.kq.ThoiGianKhachXacNhanHoanThanh,
                 // Ca đã lên lịch: Admin/Nhân viên được phân công sửa được.
-                // Ca đã hoàn thành: chỉ Admin. Ca đã hủy: không sửa.
+                // Ca đã hoàn thành: chỉ Admin (và chỉ sửa ghi chú). Ca đã hủy: không sửa.
                 CoTheSua = x.ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich
-                           || (x.ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh && laAdmin)
+                           || (x.ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh && laAdmin),
+                CoTheDeXuatHoanThanh = x.ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich
+                                       && x.kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.DangThucHien,
+                ChoKhachXacNhan = x.ca.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich
+                                  && x.kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.ChoKhachXacNhan
             }).ToList();
 
             return View(ds);
         }
 
-        // ===== Thêm =====
+        // ===== Thêm (chỉ dùng cho ca cũ chưa gắn lịch hẹn) =====
 
         [HttpGet]
         public async Task<IActionResult> Create()
@@ -117,6 +136,10 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         {
             var ca = await _context.CaDichVu.AsNoTracking().FirstOrDefaultAsync(x => x.MaCaDichVu == maCaDichVu);
             if (ca == null || ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
+                return Json(new List<object>());
+
+            // Ca tạo từ lịch hẹn đã có sẵn kết quả của khách, không thêm khách khác vào
+            if (ca.MaLichHen != null)
                 return Json(new List<object>());
 
             if (!await DuocPhanCongVaoCa(maCaDichVu))
@@ -153,32 +176,44 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             {
                 ModelState.AddModelError(nameof(kq.MaCaDichVu), "Ca đã hoàn thành, không thể thêm kết quả mới.");
             }
+            else if (ca.MaLichHen != null)
+            {
+                ModelState.AddModelError(nameof(kq.MaCaDichVu),
+                    "Ca tạo từ lịch hẹn đã có sẵn kết quả của khách. Hãy sửa kết quả hiện có.");
+            }
             else if (!await DuocPhanCongVaoCa(ca.MaCaDichVu))
             {
-                // 8.7: nhân viên chỉ ghi kết quả cho ca mình được phân công
+                // Nhân viên chỉ ghi kết quả cho ca mình được phân công
                 ModelState.AddModelError(nameof(kq.MaCaDichVu),
                     "Bạn chưa được phân công vào ca này nên không thể ghi nhận kết quả.");
             }
+            else if (!await KiemTraLichHelper.CoNhanVienPhuTrach(_context, ca.MaCaDichVu))
+            {
+                // Ca phải có nhân viên phụ trách trước khi ghi kết quả (áp dụng cả Admin)
+                ModelState.AddModelError(nameof(kq.MaCaDichVu),
+                    "Ca chưa có nhân viên phụ trách. Hãy phân công nhân viên trước khi ghi kết quả.");
+            }
 
             if (!TrangThaiHopLe.Contains(kq.TrangThaiKetQuaDichVu))
-                ModelState.AddModelError(nameof(kq.TrangThaiKetQuaDichVu), "Trạng thái không hợp lệ.");
+                ModelState.AddModelError(nameof(kq.TrangThaiKetQuaDichVu),
+                    "Trạng thái không hợp lệ. Kết quả chỉ chuyển sang Hoàn thành khi khách hàng xác nhận.");
 
             if (ca != null && ModelState.IsValid)
             {
-                // 8.7: chỉ khách có đăng ký "Đã xác nhận" đúng dịch vụ và đúng thú cưng của ca
+                // Chỉ khách có đăng ký "Đã xác nhận" đúng dịch vụ và đúng thú cưng của ca
                 bool duDieuKien = await KhachDaXacNhan(ca).AnyAsync(t => t.MaTaiKhoan == kq.MaKhachHang);
                 if (!duDieuKien)
                     ModelState.AddModelError(nameof(kq.MaKhachHang),
                         "Khách hàng không có đăng ký đã xác nhận cho dịch vụ và thú cưng của ca này.");
 
-                // 8.6: mỗi khách chỉ một kết quả cho mỗi ca
+                // Mỗi khách chỉ một kết quả cho mỗi ca
                 bool daCo = await _context.KetQuaDichVu.AnyAsync(x =>
                     x.MaCaDichVu == kq.MaCaDichVu && x.MaKhachHang == kq.MaKhachHang);
                 if (daCo)
                     ModelState.AddModelError(nameof(kq.MaKhachHang),
                         "Khách hàng này đã có kết quả cho ca. Hãy sửa kết quả hiện có.");
 
-                // 8.5: khách không được có hai ca trùng khoảng thời gian
+                // Khách không được có hai ca trùng khoảng thời gian
                 if (duDieuKien && !daCo &&
                     await KiemTraLichHelper.KhachBiTrungCa(_context, kq.MaKhachHang,
                         ca.ThoiGianBatDau, ca.ThoiGianKetThuc, ca.MaCaDichVu))
@@ -198,6 +233,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             }
 
             kq.ThoiGianGhiNhan = DateTime.Now;
+            kq.MaNguoiCapNhat = MaTaiKhoanHienTai;
             _context.KetQuaDichVu.Add(kq);
             await _context.SaveChangesAsync();
 
@@ -223,11 +259,13 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return View(kq);
         }
 
-        // 8.8: sau khi ca hoàn thành chỉ Admin được sửa và bắt buộc ghi lý do vào ghi chú
+        // Trạng thái chỉ chọn tay giữa "Chờ thực hiện" và "Đang thực hiện".
+        // Khi đã đề xuất, đã hoàn thành hoặc ca đã hoàn thành thì khóa trạng thái, chỉ sửa ghi chú.
+        // Ca đã hoàn thành: chỉ Admin, bắt buộc ghi lý do vào ghi chú nội bộ.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
-            [Bind("TrangThaiKetQuaDichVu,GhiChu")] KetQuaDichVu model)
+            [Bind("TrangThaiKetQuaDichVu,GhiChu,GhiChuNoiBo")] KetQuaDichVu model)
         {
             var kq = await _context.KetQuaDichVu.FirstOrDefaultAsync(x => x.MaKetQuaDichVu == id);
             if (kq == null) return NotFound();
@@ -238,16 +276,40 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             var loi = await KiemTraQuyenSua(ca);
             if (loi != null) return loi;
 
-            if (!TrangThaiHopLe.Contains(model.TrangThaiKetQuaDichVu))
-                ModelState.AddModelError(nameof(model.TrangThaiKetQuaDichVu), "Trạng thái không hợp lệ.");
+            bool caDaHoanThanh = ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh;
+            bool khoaTrangThai = caDaHoanThanh
+                                 || kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.ChoKhachXacNhan
+                                 || kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.HoanThanh;
 
-            if (model.TrangThaiKetQuaDichVu != HangSo.TrangThaiKetQua.ChoThucHien
-                && ca.ThoiGianBatDau > DateTime.Now)
-                ModelState.AddModelError(nameof(model.TrangThaiKetQuaDichVu),
-                    "Ca chưa bắt đầu, chỉ được ghi trạng thái 'Chờ thực hiện'.");
+            model.GhiChu = string.IsNullOrWhiteSpace(model.GhiChu) ? null : model.GhiChu.Trim();
+            model.GhiChuNoiBo = string.IsNullOrWhiteSpace(model.GhiChuNoiBo) ? null : model.GhiChuNoiBo.Trim();
 
-            if (ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh && string.IsNullOrWhiteSpace(model.GhiChu))
-                ModelState.AddModelError(nameof(model.GhiChu), "Sửa kết quả của ca đã hoàn thành phải ghi lý do.");
+            if (khoaTrangThai)
+            {
+                // Không đổi trạng thái khi đã đề xuất, đã hoàn thành hoặc ca đã hoàn thành
+                model.TrangThaiKetQuaDichVu = kq.TrangThaiKetQuaDichVu;
+
+                if (caDaHoanThanh && model.GhiChuNoiBo == null)
+                    ModelState.AddModelError(nameof(model.GhiChuNoiBo),
+                        "Sửa kết quả của ca đã hoàn thành phải ghi lý do vào ghi chú nội bộ.");
+            }
+            else
+            {
+                if (!TrangThaiHopLe.Contains(model.TrangThaiKetQuaDichVu))
+                    ModelState.AddModelError(nameof(model.TrangThaiKetQuaDichVu),
+                        "Không được tự chuyển kết quả sang Hoàn thành. Hãy dùng chức năng đề xuất hoàn thành.");
+
+                if (model.TrangThaiKetQuaDichVu != HangSo.TrangThaiKetQua.ChoThucHien)
+                {
+                    if (ca.ThoiGianBatDau > DateTime.Now)
+                        ModelState.AddModelError(nameof(model.TrangThaiKetQuaDichVu),
+                            "Ca chưa bắt đầu, chỉ được ghi trạng thái 'Chờ thực hiện'.");
+
+                    if (!await KiemTraLichHelper.CoNhanVienPhuTrach(_context, ca.MaCaDichVu))
+                        ModelState.AddModelError(nameof(model.TrangThaiKetQuaDichVu),
+                            "Ca chưa có nhân viên phụ trách. Hãy phân công nhân viên trước.");
+                }
+            }
 
             if (!ModelState.IsValid)
             {
@@ -258,13 +320,198 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 return View(model);
             }
 
+            var trangThaiCu = kq.TrangThaiKetQuaDichVu;
+
             kq.TrangThaiKetQuaDichVu = model.TrangThaiKetQuaDichVu;
             kq.GhiChu = model.GhiChu;
+            kq.GhiChuNoiBo = model.GhiChuNoiBo;
             kq.ThoiGianGhiNhan = DateTime.Now;
+            kq.MaNguoiCapNhat = MaTaiKhoanHienTai;
+
+            // Ghi nhật ký: ai sửa, lúc nào, sửa gì
+            var noiDung = (caDaHoanThanh ? "Sửa sau khi ca hoàn thành. " : "")
+                          + $"Trạng thái: {trangThaiCu} → {kq.TrangThaiKetQuaDichVu}.";
+            if (model.GhiChuNoiBo != null)
+                noiDung += " Ghi chú nội bộ: " + model.GhiChuNoiBo;
+            if (noiDung.Length > 1000)
+                noiDung = noiDung[..1000];
+
+            _context.NhatKyKetQuaDichVu.Add(new NhatKyKetQuaDichVu
+            {
+                MaKetQuaDichVu = kq.MaKetQuaDichVu,
+                MaNguoiSua = MaTaiKhoanHienTai,
+                ThoiGian = DateTime.Now,
+                NoiDung = noiDung
+            });
+
             await _context.SaveChangesAsync();
 
             TempData["ThongBao"] = "Đã cập nhật kết quả dịch vụ.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // ===== Nhân viên đề xuất hoàn thành =====
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeXuatHoanThanh(int id)
+        {
+            var kq = await _context.KetQuaDichVu.FirstOrDefaultAsync(x => x.MaKetQuaDichVu == id);
+            if (kq == null) return NotFound();
+
+            var ca = await _context.CaDichVu.AsNoTracking().FirstOrDefaultAsync(x => x.MaCaDichVu == kq.MaCaDichVu);
+            if (ca == null) return NotFound();
+
+            if (ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
+            {
+                TempData["Loi"] = "Ca đã hủy hoặc đã hoàn thành.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Nhân viên chỉ được thao tác trên ca mình phụ trách
+            if (!await DuocPhanCongVaoCa(ca.MaCaDichVu))
+                return RedirectToAction("KhongCoQuyen", "TaiKhoan");
+
+            if (ca.ThoiGianBatDau > DateTime.Now)
+            {
+                TempData["Loi"] = "Ca dịch vụ chưa bắt đầu.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await KiemTraLichHelper.CoNhanVienPhuTrach(_context, ca.MaCaDichVu))
+            {
+                TempData["Loi"] = "Ca chưa có nhân viên phụ trách. Hãy phân công nhân viên trước.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (kq.TrangThaiKetQuaDichVu != HangSo.TrangThaiKetQua.DangThucHien)
+            {
+                TempData["Loi"] = "Chỉ được đề xuất hoàn thành khi kết quả đang ở trạng thái 'Đang thực hiện'.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            kq.TrangThaiKetQuaDichVu = HangSo.TrangThaiKetQua.ChoKhachXacNhan;
+            kq.ThoiGianDeXuatHoanThanh = DateTime.Now;
+            kq.ThoiGianGhiNhan = DateTime.Now;
+            kq.MaNguoiCapNhat = MaTaiKhoanHienTai;
+
+            _context.NhatKyKetQuaDichVu.Add(new NhatKyKetQuaDichVu
+            {
+                MaKetQuaDichVu = kq.MaKetQuaDichVu,
+                MaNguoiSua = MaTaiKhoanHienTai,
+                ThoiGian = DateTime.Now,
+                NoiDung = "Đề xuất hoàn thành dịch vụ, chờ khách hàng xác nhận."
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["ThongBao"] = "Đã gửi đề xuất hoàn thành đến khách hàng.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===== Admin xác nhận thay khách hàng (khi khách không phản hồi) =====
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
+        public async Task<IActionResult> XacNhanThay(int id, string? lyDo)
+        {
+            var kq = await _context.KetQuaDichVu.FirstOrDefaultAsync(x => x.MaKetQuaDichVu == id);
+            if (kq == null) return NotFound();
+
+            var ca = await _context.CaDichVu.AsNoTracking().FirstOrDefaultAsync(x => x.MaCaDichVu == kq.MaCaDichVu);
+            if (ca == null) return NotFound();
+
+            if (ca.TrangThai != HangSo.TrangThaiCaDichVu.DaLenLich)
+            {
+                TempData["Loi"] = "Ca đã hủy hoặc đã hoàn thành.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (kq.TrangThaiKetQuaDichVu != HangSo.TrangThaiKetQua.ChoKhachXacNhan)
+            {
+                TempData["Loi"] = "Chỉ xác nhận thay khi kết quả đang chờ khách hàng xác nhận.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            lyDo = lyDo?.Trim();
+            if (string.IsNullOrEmpty(lyDo))
+            {
+                TempData["Loi"] = "Phải ghi lý do khi xác nhận thay khách hàng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (lyDo.Length > 500)
+            {
+                TempData["Loi"] = "Lý do tối đa 500 ký tự.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var bayGio = DateTime.Now;
+
+                kq.TrangThaiKetQuaDichVu = HangSo.TrangThaiKetQua.HoanThanh;
+                kq.ThoiGianKhachXacNhanHoanThanh = bayGio;
+                kq.ThoiGianGhiNhan = bayGio;
+                kq.MaNguoiCapNhat = MaTaiKhoanHienTai;
+                kq.GhiChuNoiBo = GhiThem(kq.GhiChuNoiBo,
+                    $"[{bayGio:dd/MM/yyyy HH:mm}] Admin xác nhận thay khách hàng. Lý do: {lyDo}");
+
+                _context.NhatKyKetQuaDichVu.Add(new NhatKyKetQuaDichVu
+                {
+                    MaKetQuaDichVu = kq.MaKetQuaDichVu,
+                    MaNguoiSua = MaTaiKhoanHienTai,
+                    ThoiGian = bayGio,
+                    NoiDung = "Admin xác nhận hoàn thành thay khách hàng. Lý do: " + lyDo
+                });
+
+                await _context.SaveChangesAsync();
+
+                bool caHoanThanh = await HoanThanhCaHelper.HoanThanhCaNeuDuDieuKien(_context, ca.MaCaDichVu);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["ThongBao"] = caHoanThanh
+                    ? "Đã xác nhận thay khách hàng. Ca dịch vụ đã hoàn thành."
+                    : "Đã xác nhận thay khách hàng.";
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                TempData["Loi"] = "Có lỗi xảy ra, vui lòng thử lại.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===== Lịch sử sửa (chỉ Admin) =====
+
+        [HttpGet]
+        [PhanQuyen(HangSo.VaiTro.Admin)]
+        public async Task<IActionResult> LichSu(int id)
+        {
+            var kq = await _context.KetQuaDichVu.AsNoTracking().FirstOrDefaultAsync(x => x.MaKetQuaDichVu == id);
+            if (kq == null) return NotFound();
+
+            var tenTaiKhoan = await _context.TaiKhoan.AsNoTracking()
+                .ToDictionaryAsync(x => x.MaTaiKhoan, x => x.HoTen);
+
+            var nhatKy = await _context.NhatKyKetQuaDichVu.AsNoTracking()
+                .Where(n => n.MaKetQuaDichVu == id)
+                .OrderByDescending(n => n.ThoiGian)
+                .ToListAsync();
+
+            ViewBag.MaKetQuaDichVu = id;
+            ViewBag.TenKhachHang = tenTaiKhoan.GetValueOrDefault(kq.MaKhachHang, "#" + kq.MaKhachHang);
+
+            return View(nhatKy.Select(n => new NhatKyHienThi
+            {
+                ThoiGian = n.ThoiGian,
+                NguoiSua = tenTaiKhoan.GetValueOrDefault(n.MaNguoiSua, "#" + n.MaNguoiSua),
+                NoiDung = n.NoiDung
+            }).ToList());
         }
 
         // ===== Hàm dùng chung =====
@@ -315,19 +562,22 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 .Where(x => x.MaThuCung == ca.MaThuCung).Select(x => x.HoTen).FirstOrDefaultAsync()
                 ?? ("#" + ca.MaThuCung);
             ViewBag.CaDaHoanThanh = ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh;
+            ViewBag.KhoaTrangThai = ca.TrangThai == HangSo.TrangThaiCaDichVu.DaHoanThanh
+                                    || kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.ChoKhachXacNhan
+                                    || kq.TrangThaiKetQuaDichVu == HangSo.TrangThaiKetQua.HoanThanh;
         }
 
         private async Task NapLuaChon()
         {
             var truyVan = _context.CaDichVu.AsNoTracking()
-                .Where(x => x.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich);
+                .Where(x => x.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich && x.MaLichHen == null);
 
             // Nhân viên chỉ thấy các ca mình được phân công
             if (!LaAdmin)
             {
                 var caCuaToi = CaCuaToi();
                 truyVan = truyVan.Where(c => caCuaToi.Contains(c.MaCaDichVu));
-                ViewBag.ChuaLienKet = !await DaLienKetNhanVien();
+                ViewBag.ChuaLienKet = !await _context.CoHoSoNhanVienHopLe(MaTaiKhoanHienTai);
             }
 
             var cas = await truyVan.OrderBy(x => x.ThoiGianBatDau).ToListAsync();
@@ -353,6 +603,19 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         public string TrangThai { get; set; } = string.Empty;
         public DateTime ThoiGianGhiNhan { get; set; }
         public string? GhiChu { get; set; }
+        public string? GhiChuNoiBo { get; set; }
+        public string TenNguoiCapNhat { get; set; } = string.Empty;
+        public DateTime? ThoiGianDeXuatHoanThanh { get; set; }
+        public DateTime? ThoiGianKhachXacNhanHoanThanh { get; set; }
         public bool CoTheSua { get; set; }
+        public bool CoTheDeXuatHoanThanh { get; set; }
+        public bool ChoKhachXacNhan { get; set; }
+    }
+
+    public class NhatKyHienThi
+    {
+        public DateTime ThoiGian { get; set; }
+        public string NguoiSua { get; set; } = string.Empty;
+        public string NoiDung { get; set; } = string.Empty;
     }
 }

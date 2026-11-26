@@ -32,6 +32,7 @@ public class AppDbContext : DbContext
     public DbSet<PhanCongNhanVien> PhanCongNhanVien { get; set; }
     public DbSet<CaDichVu> CaDichVu { get; set; }
     public DbSet<KetQuaDichVu> KetQuaDichVu { get; set; }
+    public DbSet<NhatKyKetQuaDichVu> NhatKyKetQuaDichVu { get; set; }
 
 
     // ===== SV5: ThanhToan =====
@@ -95,6 +96,27 @@ public class AppDbContext : DbContext
             .HasOne<TaiKhoan>()
             .WithMany()
             .HasForeignKey(x => x.MaTaiKhoan)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Mỗi lịch hẹn chỉ có một ca chưa hủy
+        modelBuilder.Entity<CaDichVu>()
+            .HasIndex(x => x.MaLichHen)
+            .IsUnique()
+            .HasFilter("[MaLichHen] IS NOT NULL AND [TrangThai] <> N'Đã hủy'");
+
+        modelBuilder.Entity<CaDichVu>()
+            .HasOne<LichHen>()
+            .WithMany()
+            .HasForeignKey(x => x.MaLichHen)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<NhatKyKetQuaDichVu>()
+            .HasIndex(x => x.MaKetQuaDichVu);
+
+        modelBuilder.Entity<NhatKyKetQuaDichVu>()
+            .HasOne<KetQuaDichVu>()
+            .WithMany()
+            .HasForeignKey(x => x.MaKetQuaDichVu)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ----- SV5 -----
