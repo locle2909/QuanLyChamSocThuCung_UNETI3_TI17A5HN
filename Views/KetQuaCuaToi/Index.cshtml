@@ -6,6 +6,15 @@
 
 <h2>Kết quả dịch vụ của tôi</h2>
 
+@if (TempData["ThongBao"] != null)
+{
+    <div class="alert alert-success">@TempData["ThongBao"]</div>
+}
+@if (TempData["Loi"] != null)
+{
+    <div class="alert alert-warning">@TempData["Loi"]</div>
+}
+
 @if (!Model.Any())
 {
     <div class="alert alert-info">Bạn chưa có kết quả dịch vụ nào.</div>
@@ -23,19 +32,76 @@ else
                     <th>Kết quả</th>
                     <th>Cập nhật lúc</th>
                     <th>Ghi chú</th>
+                    <th>Xác nhận</th>
                 </tr>
             </thead>
             <tbody>
-            @foreach (var kq in Model)
+            @foreach (var item in Model)
             {
                 <tr>
-                    <td>@kq.TenDichVu</td>
-                    <td>@kq.TenThuCung</td>
-                    <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@kq.TrangThaiCa</td>
-                    <td>@kq.TrangThai</td>
-                    <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@kq.GhiChu</td>
+                    <td>@item.TenDichVu</td>
+                    <td>@item.TenThuCung</td>
+                    <td>@item.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@item.TrangThaiCa</td>
+                    <td>
+                        @if (item.TrangThai == HangSo.TrangThaiKetQua.HoanThanh)
+                        {
+                            <span class="badge bg-success">Hoàn thành</span>
+                        }
+                        else if (item.TrangThai == HangSo.TrangThaiKetQua.ChoKhachXacNhan)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ bạn xác nhận</span>
+                        }
+                        else if (item.TrangThai == HangSo.TrangThaiKetQua.DangThucHien)
+                        {
+                            <span class="badge bg-primary">Đang thực hiện</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.TrangThai</span>
+                        }
+                    </td>
+                    <td>@item.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@item.GhiChu</td>
+                    <td style="min-width: 260px">
+                        @if (item.ChoKhachXacNhan)
+                        {
+                            if (item.ThoiGianDeXuatHoanThanh != null)
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        Nhân viên đề xuất lúc @item.ThoiGianDeXuatHoanThanh.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </div>
+                            }
+
+                            <form asp-action="XacNhanHoanThanh" asp-route-id="@item.MaKetQuaDichVu" method="post" class="mb-2"
+                                  onsubmit="return confirm('Bạn xác nhận dịch vụ đã hoàn thành?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm">Xác nhận hoàn thành</button>
+                            </form>
+
+                            <form asp-action="YeuCauLamLai" asp-route-id="@item.MaKetQuaDichVu" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="lyDo" class="form-control form-control-sm mb-1"
+                                       maxlength="500" placeholder="Lý do chưa hài lòng" required />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Chưa hài lòng, yêu cầu làm lại</button>
+                            </form>
+                        }
+                        else if (item.TrangThai == HangSo.TrangThaiKetQua.HoanThanh)
+                        {
+                            <span class="text-success">Đã xác nhận</span>
+                            if (item.ThoiGianKhachXacNhanHoanThanh != null)
+                            {
+                                <br />
+                                <small class="text-muted">@item.ThoiGianKhachXacNhanHoanThanh.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa có yêu cầu xác nhận</span>
+                        }
+                    </td>
                 </tr>
             }
             </tbody>

@@ -38,8 +38,10 @@
         <select asp-for="TrangThaiKetQuaDichVu" class="form-select">
             <option value="Chờ thực hiện">Chờ thực hiện</option>
             <option value="Đang thực hiện">Đang thực hiện</option>
-            <option value="Hoàn thành">Hoàn thành</option>
         </select>
+        <div class="form-text">
+            Khi thực hiện xong, hãy sử dụng chức năng "Đề xuất hoàn thành". Khách hàng sẽ xác nhận trước khi kết quả chuyển sang Hoàn thành.
+        </div>
         <span asp-validation-for="TrangThaiKetQuaDichVu" class="text-danger"></span>
     </div>
 

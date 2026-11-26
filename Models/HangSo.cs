@@ -67,6 +67,7 @@ public static class HangSo
     {
         public const string ChoThucHien = "Chờ thực hiện";
         public const string DangThucHien = "Đang thực hiện";
+        public const string ChoKhachXacNhan = "Chờ khách xác nhận";
         public const string HoanThanh = "Hoàn thành";
     }
 

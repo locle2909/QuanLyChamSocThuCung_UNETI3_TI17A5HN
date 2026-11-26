@@ -2,70 +2,74 @@
 
 @{
     ViewData["Title"] = "Tạo ca dịch vụ";
-    var dichVus = ViewBag.DichVus as List<DichVu> ?? new();
-    var thuCungs = ViewBag.ThuCungs as List<ThuCung> ?? new();
+    var dsLichHen = ViewBag.DsLichHen as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+    bool daChon = Model.MaLichHen != null;
 }
 
-<h2>Tạo ca dịch vụ</h2>
+<h2>Tạo ca dịch vụ từ lịch hẹn</h2>
 
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+@if (TempData["Loi"] != null)
+{
+    <div class="alert alert-warning">@TempData["Loi"]</div>
+}
 
-    <div class="mb-3">
-        <label asp-for="MaDichVu" class="form-label">Dịch vụ</label>
-        <select asp-for="MaDichVu" class="form-select">
-            <option value="">-- Chọn dịch vụ --</option>
-            @foreach (var dv in dichVus)
+<form method="get" asp-action="Create" class="mb-4">
+    <label class="form-label">Lịch hẹn đã xác nhận (chưa có ca)</label>
+    <div class="input-group">
+        <select name="maLichHen" class="form-select">
+            <option value="">-- Chọn lịch hẹn --</option>
+            @foreach (var item in dsLichHen)
             {
-                <option value="@dv.MaDichVu">@dv.TenDichVu (@dv.NhomDichVu)</option>
+                <option value="@item.Value" selected="@(item.Value == Model.MaLichHen?.ToString())">@item.Text</option>
             }
         </select>
-        <span asp-validation-for="MaDichVu" class="text-danger"></span>
+        <button class="btn btn-outline-primary" type="submit">Chọn</button>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="MaThuCung" class="form-label">Thú cưng</label>
-        <select asp-for="MaThuCung" class="form-select">
-            <option value="">-- Chọn thú cưng --</option>
-            @foreach (var tc in thuCungs)
-            {
-                <option value="@tc.MaThuCung">@tc.HoTen (@tc.GiongLoai)</option>
-            }
-        </select>
-        <span asp-validation-for="MaThuCung" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ThoiGianBatDau" class="form-label">Thời gian bắt đầu</label>
-        <input asp-for="ThoiGianBatDau" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
-        <span asp-validation-for="ThoiGianBatDau" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ThoiGianKetThuc" class="form-label">Thời gian kết thúc</label>
-        <input asp-for="ThoiGianKetThuc" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
-        <span asp-validation-for="ThoiGianKetThuc" class="text-danger"></span>
-        <div class="form-text">Ca thường nằm trong 07:00 - 21:00 cùng một ngày (dịch vụ lưu trú được nhiều ngày).</div>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="PhongHocHoacHinhThuc" class="form-label">Phòng / hình thức</label>
-        <input asp-for="PhongHocHoacHinhThuc" class="form-control" list="dsPhong" />
-        <datalist id="dsPhong">
-            <option value="Phòng 1"></option>
-            <option value="Phòng 2"></option>
-            <option value="Phòng 3"></option>
-            <option value="Tại nhà"></option>
-        </datalist>
-        <span asp-validation-for="PhongHocHoacHinhThuc" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
-        <textarea asp-for="GhiChu" class="form-control"></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Lưu ca</button>
-    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    @if (!dsLichHen.Any())
+    {
+        <div class="form-text">Hiện không có lịch hẹn nào đã xác nhận mà chưa có ca.</div>
+    }
 </form>
+
+@if (daChon)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="mb-1"><strong>Khách hàng:</strong> @ViewBag.TenKhachHang</p>
+            <p class="mb-1"><strong>Dịch vụ:</strong> @ViewBag.TenDichVu</p>
+            <p class="mb-1"><strong>Thú cưng:</strong> @ViewBag.TenThuCung</p>
+            <p class="mb-0"><strong>Thời gian:</strong>
+                @Model.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm") - @Model.ThoiGianKetThuc.ToString("dd/MM/yyyy HH:mm")
+            </p>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MaLichHen" />
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="PhongHocHoacHinhThuc" class="form-label">Phòng / hình thức</label>
+            <input asp-for="PhongHocHoacHinhThuc" class="form-control" list="dsPhong" />
+            <datalist id="dsPhong">
+                <option value="Phòng 1"></option>
+                <option value="Phòng 2"></option>
+                <option value="Phòng 3"></option>
+                <option value="Tại nhà"></option>
+            </datalist>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+            <textarea asp-for="GhiChu" class="form-control"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Tạo ca</button>
+        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+    </form>
+}
+else
+{
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+}

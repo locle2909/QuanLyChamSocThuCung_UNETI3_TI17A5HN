@@ -41,10 +41,14 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             if (!HttpContext.LaAdmin())
             {
                 var maTk = HttpContext.LayMaTaiKhoan();
-                var maNhanVien = await _context.NhanVien
-                    .Where(n => n.MaTaiKhoan == maTk && n.TrangThai)
-                    .Select(n => (int?)n.MaNhanVien)
-                    .FirstOrDefaultAsync();
+                var maNhanVien = await (
+                    from nv in _context.NhanVien
+                    join tk in _context.TaiKhoan on nv.MaTaiKhoan equals (int?)tk.MaTaiKhoan
+                    where tk.MaTaiKhoan == maTk
+                          && tk.TrangThai
+                          && tk.VaiTro == HangSo.VaiTro.NhanVien
+                          && nv.TrangThai
+                    select (int?)nv.MaNhanVien).FirstOrDefaultAsync();
 
                 ViewBag.ChuaLienKet = maNhanVien == null;
                 truyVan = truyVan.Where(x => x.MaNhanVien == maNhanVien);
@@ -81,6 +85,18 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                     "Ca này đang ở trạng thái \"" + ca.TrangThai +
                     "\", chỉ phân công được cho ca \"" +
                     HangSo.TrangThaiCaDichVu.DaLenLich + "\".");
+
+            // Không cho phân công ca đã đến giờ bắt đầu hoặc đã quá giờ.
+            if (ca.ThoiGianBatDau <= DateTime.Now)
+                return KetQuaNhanVien(
+                    "Ca đã đến giờ bắt đầu hoặc đã quá thời gian, không thể phân công.");
+
+            // Mỗi ca chỉ được có một nhân viên phân công còn hiệu lực.
+            if (await _context.PhanCongNhanVien.AnyAsync(pc =>
+                    pc.MaCaDichVu == maCaDichVu
+                    && pc.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc))
+                return KetQuaNhanVien(
+                    "Ca này đã có nhân viên được phân công. Không thể phân công thêm.");
 
             var dichVu = await _context.DichVus.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaDichVu == ca.MaDichVu);
@@ -161,17 +177,15 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                     "Vui lòng chọn ca dịch vụ.");
             }
 
-            // Kiểm tra nhân viên đang hoạt động.
-            var nhanVien = await _context.NhanVien
-                .FirstOrDefaultAsync(x =>
-                    x.MaNhanVien == pc.MaNhanVien &&
-                    x.TrangThai);
+            // Nhân viên phải đang hoạt động và đã liên kết tài khoản nhân viên đang hoạt động.
+            var nhanVien = await NhanVienHopLe()
+                .FirstOrDefaultAsync(x => x.MaNhanVien == pc.MaNhanVien);
 
             if (nhanVien == null && pc.MaNhanVien > 0)
             {
                 ModelState.AddModelError(
                     nameof(pc.MaNhanVien),
-                    "Nhân viên không tồn tại hoặc đã ngừng hoạt động.");
+                    "Nhân viên không tồn tại, đã ngừng hoạt động hoặc chưa liên kết tài khoản đăng nhập.");
             }
 
             // Kiểm tra ca dịch vụ.
@@ -195,6 +209,26 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                     ModelState.AddModelError(
                         nameof(pc.MaCaDichVu),
                         "Không thể phân công vào ca đã hủy hoặc hoàn thành.");
+                }
+
+                // Không cho phân công ca đã đến giờ bắt đầu hoặc đã quá giờ.
+                if (ca.ThoiGianBatDau <= DateTime.Now)
+                {
+                    ModelState.AddModelError(
+                        nameof(pc.MaCaDichVu),
+                        "Ca đã đến giờ bắt đầu hoặc đã quá thời gian, không thể phân công.");
+                }
+
+                // Mỗi ca chỉ được có một nhân viên phân công còn hiệu lực.
+                var caDaCoNhanVien = await _context.PhanCongNhanVien.AnyAsync(x =>
+                    x.MaCaDichVu == pc.MaCaDichVu
+                    && x.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc);
+
+                if (caDaCoNhanVien)
+                {
+                    ModelState.AddModelError(
+                        nameof(pc.MaCaDichVu),
+                        "Ca này đã có nhân viên được phân công. Không thể phân công thêm.");
                 }
 
                 // Kiểm tra thời gian ca.
@@ -326,6 +360,18 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Nhân viên đủ điều kiện nhận phân công: hồ sơ đang hoạt động và đã liên kết
+        // với tài khoản đăng nhập (vai trò Nhân viên, đang hoạt động)
+        private IQueryable<NhanVien> NhanVienHopLe()
+        {
+            return from nv in _context.NhanVien
+                   join tk in _context.TaiKhoan on nv.MaTaiKhoan equals (int?)tk.MaTaiKhoan
+                   where nv.TrangThai
+                         && tk.TrangThai
+                         && tk.VaiTro == HangSo.VaiTro.NhanVien
+                   select nv;
+        }
+
         // 8.2: nhân viên có chuyên môn đúng nhóm dịch vụ, và thú cưng của ca có thông tin chăm sóc
         // đang hiệu lực đúng loại dịch vụ. Trả về null nếu hợp lệ, ngược lại trả về thông báo lỗi.
         private async Task<string?> KiemTraChuyenMon(CaDichVu ca, int maNhanVien)
@@ -368,9 +414,7 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         {
             var nhomChuan = ChuanHoaNhom(nhom);
 
-            var nhanViens = await _context.NhanVien.AsNoTracking()
-                .Where(nv => nv.TrangThai)
-                .ToListAsync();
+            var nhanViens = await NhanVienHopLe().AsNoTracking().ToListAsync();
 
             var chuyenMons = await _context.ChuyenMonNhanVien.AsNoTracking()
                 .Select(cm => new { cm.MaNhanVien, cm.TenChuyenMon })
@@ -406,15 +450,21 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         // 6. Nạp danh sách lựa chọn cho giao diện
         private async Task NapDanhSachLuaChon()
         {
-            ViewBag.NhanViens = await _context.NhanVien
-                .Where(x => x.TrangThai)
+            ViewBag.NhanViens = await NhanVienHopLe()
                 .OrderBy(x => x.HoTen)
                 .ToListAsync();
 
+            var hienTai = DateTime.Now;
+
+            // Chỉ hiển thị ca sắp diễn ra, chưa hủy/hoàn thành
+            // và chưa có nhân viên được phân công còn hiệu lực.
             ViewBag.CaDichVus = await _context.CaDichVu
                 .Where(x =>
-                    x.TrangThai != HangSo.TrangThaiCaDichVu.DaHuy &&
-                    x.TrangThai != HangSo.TrangThaiCaDichVu.DaHoanThanh)
+                    x.TrangThai == HangSo.TrangThaiCaDichVu.DaLenLich
+                    && x.ThoiGianBatDau > hienTai
+                    && !_context.PhanCongNhanVien.Any(pc =>
+                        pc.MaCaDichVu == x.MaCaDichVu
+                        && pc.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc))
                 .OrderBy(x => x.ThoiGianBatDau)
                 .ToListAsync();
         }

@@ -1,0 +1,37 @@
+﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.NhatKyHienThi>
+
+@{
+    ViewData["Title"] = "Lịch sử sửa kết quả";
+}
+
+<h2>Lịch sử sửa kết quả #@ViewBag.MaKetQuaDichVu</h2>
+<p><strong>Khách hàng:</strong> @ViewBag.TenKhachHang</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Kết quả này chưa được sửa lần nào.</div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Thời gian</th>
+                <th>Người sửa</th>
+                <th>Nội dung</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var n in Model)
+        {
+            <tr>
+                <td class="text-nowrap">@n.ThoiGian.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@n.NguoiSua</td>
+                <td>@n.NoiDung</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Quay lại</a>

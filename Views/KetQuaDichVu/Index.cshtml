@@ -1,17 +1,12 @@
-﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
+﻿@using Microsoft.AspNetCore.Http
+@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
 
 @{
     ViewData["Title"] = "Kết quả dịch vụ";
+    var laAdmin = Context.Session.GetString(HangSo.SessionKey.VaiTro) == HangSo.VaiTro.Admin;
 }
 
 <h2>Kết quả dịch vụ</h2>
-@if (ViewBag.ChuaLienKet == true)
-{
-    <div class="alert alert-warning">
-        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên nên chưa thấy ca nào.
-        Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
-    </div>
-}
 
 @if (TempData["ThongBao"] != null)
 {
@@ -21,49 +16,115 @@
 {
     <div class="alert alert-warning">@TempData["Loi"]</div>
 }
+@if (ViewBag.ChuaLienKet == true)
+{
+    <div class="alert alert-warning">
+        Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên đang hoạt động nên chưa thấy ca nào.
+        Hãy nhờ Admin liên kết tài khoản trong mục Nhân viên.
+    </div>
+}
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Ghi nhận kết quả</a>
+    
     <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">Ca dịch vụ</a>
 </p>
 
-<table class="table table-bordered table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Mã KQ</th>
-            <th>Ca</th>
-            <th>Khách hàng</th>
-            <th>Dịch vụ</th>
-            <th>Thú cưng</th>
-            <th>Thời gian ca</th>
-            <th>Trạng thái ca</th>
-            <th>Kết quả</th>
-            <th>Ghi nhận lúc</th>
-            <th>Ghi chú</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var kq in Model)
-    {
-        <tr>
-            <td>@kq.MaKetQuaDichVu</td>
-            <td>@kq.MaCaDichVu</td>
-            <td>@kq.TenKhachHang</td>
-            <td>@kq.TenDichVu</td>
-            <td>@kq.TenThuCung</td>
-            <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@kq.TrangThaiCa</td>
-            <td>@kq.TrangThai</td>
-            <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
-            <td>@kq.GhiChu</td>
-            <td>
-                @if (kq.CoTheSua)
-                {
-                    <a asp-action="Edit" asp-route-id="@kq.MaKetQuaDichVu" class="btn btn-sm btn-warning">Sửa</a>
-                }
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Mã KQ</th>
+                <th>Ca</th>
+                <th>Khách hàng</th>
+                <th>Dịch vụ</th>
+                <th>Thú cưng</th>
+                <th>Thời gian ca</th>
+                <th>Trạng thái ca</th>
+                <th>Kết quả</th>
+                <th>Cập nhật lúc</th>
+                <th>Ghi chú (khách thấy)</th>
+                <th>Ghi chú nội bộ</th>
+                <th>Cập nhật bởi</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var kq in Model)
+            {
+                <tr>
+                    <td>@kq.MaKetQuaDichVu</td>
+                    <td>@kq.MaCaDichVu</td>
+                    <td>@kq.TenKhachHang</td>
+                    <td>@kq.TenDichVu</td>
+                    <td>@kq.TenThuCung</td>
+                    <td>@kq.ThoiGianBatDau.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@kq.TrangThaiCa</td>
+                    <td>
+                        @if (kq.TrangThai == HangSo.TrangThaiKetQua.HoanThanh)
+                        {
+                            <span class="badge bg-success">Hoàn thành</span>
+                            if (kq.ThoiGianKhachXacNhanHoanThanh != null)
+                            {
+                                <br />
+                                <small class="text-muted">Khách xác nhận: @kq.ThoiGianKhachXacNhanHoanThanh.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                            }
+                        }
+                        else if (kq.TrangThai == HangSo.TrangThaiKetQua.ChoKhachXacNhan)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ khách xác nhận</span>
+                            if (kq.ThoiGianDeXuatHoanThanh != null)
+                            {
+                                <br />
+                                <small class="text-muted">Đề xuất: @kq.ThoiGianDeXuatHoanThanh.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                            }
+                        }
+                        else if (kq.TrangThai == HangSo.TrangThaiKetQua.DangThucHien)
+                        {
+                            <span class="badge bg-primary">Đang thực hiện</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@kq.TrangThai</span>
+                        }
+                    </td>
+                    <td>@kq.ThoiGianGhiNhan.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@kq.GhiChu</td>
+                    <td style="white-space: pre-line">@kq.GhiChuNoiBo</td>
+                    <td>@kq.TenNguoiCapNhat</td>
+                    <td>
+                        @if (kq.CoTheSua)
+                        {
+                            <a asp-action="Edit" asp-route-id="@kq.MaKetQuaDichVu" class="btn btn-sm btn-warning">Sửa</a>
+                        }
+
+                        @if (kq.CoTheDeXuatHoanThanh)
+                        {
+                            <form asp-action="DeXuatHoanThanh" asp-route-id="@kq.MaKetQuaDichVu" method="post" class="d-inline"
+                                  onsubmit="return confirm('Gửi đề xuất hoàn thành đến khách hàng?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-success">Đề xuất hoàn thành</button>
+                            </form>
+                        }
+
+                        @if (laAdmin && kq.ChoKhachXacNhan)
+                        {
+                            <form asp-action="XacNhanThay" asp-route-id="@kq.MaKetQuaDichVu" method="post"
+                                  class="d-flex gap-1 mt-1"
+                                  onsubmit="return confirm('Xác nhận thay khách hàng? Việc này được ghi vào lịch sử.');">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="lyDo" class="form-control form-control-sm" maxlength="500"
+                                       placeholder="Lý do xác nhận thay" required />
+                                <button type="submit" class="btn btn-sm btn-dark text-nowrap">Xác nhận thay</button>
+                            </form>
+                        }
+
+                        @if (laAdmin)
+                        {
+                            <a asp-action="LichSu" asp-route-id="@kq.MaKetQuaDichVu" class="btn btn-sm btn-outline-secondary">Lịch sử</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

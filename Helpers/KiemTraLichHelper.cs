@@ -49,19 +49,22 @@ public static class KiemTraLichHelper
                 || dichVu.TrangThai == HangSo.TrangThaiDichVu.NgungPhucVu)
                 loi.Add((nameof(CaDichVu.MaDichVu), "Dịch vụ đang tạm ngừng hoặc đã ngừng phục vụ."));
 
-            // Khoảng thời gian hợp lệ của dịch vụ
-            if (dichVu.NhomDichVu == NhomLuuTru)
+            // Ca tạo từ lịch hẹn đã xác nhận thì giờ do lịch hẹn quyết định, không kiểm tra khung giờ
+            if (ca.MaLichHen == null)
             {
-                if ((kt - bd).TotalDays > SoNgayLuuTruToiDa)
-                    loi.Add((nameof(CaDichVu.ThoiGianKetThuc), $"Dịch vụ lưu trú tối đa {SoNgayLuuTruToiDa} ngày."));
-            }
-            else if (bd.Date != kt.Date)
-            {
-                loi.Add((nameof(CaDichVu.ThoiGianKetThuc), "Ca phải bắt đầu và kết thúc trong cùng một ngày."));
-            }
-            else if (bd.TimeOfDay < TimeSpan.FromHours(GioMoCua) || kt.TimeOfDay > TimeSpan.FromHours(GioDongCua))
-            {
-                loi.Add((nameof(CaDichVu.ThoiGianBatDau), $"Ca phải nằm trong giờ làm việc {GioMoCua}:00 - {GioDongCua}:00."));
+                if (dichVu.NhomDichVu == NhomLuuTru)
+                {
+                    if ((kt - bd).TotalDays > SoNgayLuuTruToiDa)
+                        loi.Add((nameof(CaDichVu.ThoiGianKetThuc), $"Dịch vụ lưu trú tối đa {SoNgayLuuTruToiDa} ngày."));
+                }
+                else if (bd.Date != kt.Date)
+                {
+                    loi.Add((nameof(CaDichVu.ThoiGianKetThuc), "Ca phải bắt đầu và kết thúc trong cùng một ngày."));
+                }
+                else if (bd.TimeOfDay < TimeSpan.FromHours(GioMoCua) || kt.TimeOfDay > TimeSpan.FromHours(GioDongCua))
+                {
+                    loi.Add((nameof(CaDichVu.ThoiGianBatDau), $"Ca phải nằm trong giờ làm việc {GioMoCua}:00 - {GioDongCua}:00."));
+                }
             }
         }
 
@@ -132,4 +135,51 @@ public static class KiemTraLichHelper
             && l.ThoiGianBatDau < kt
             && bd < l.ThoiGianKetThuc);
     }
+
+    // Ca có ít nhất một nhân viên đang hoạt động được phân công (phân công còn hiệu lực)
+    public static Task<bool> CoNhanVienPhuTrach(AppDbContext db, int maCaDichVu)
+    {
+        return (from pc in db.PhanCongNhanVien
+                join nv in db.NhanVien on pc.MaNhanVien equals nv.MaNhanVien
+                where pc.MaCaDichVu == maCaDichVu
+                      && pc.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc
+                      && nv.TrangThai
+                select pc.MaPhanCong).AnyAsync();
+    }
+
+    // Kiểm tra ca đã quá thời gian bắt đầu hay chưa
+    public static bool CaDaQuaThoiGian(CaDichVu ca)
+    {
+        return ca.ThoiGianBatDau <= DateTime.Now;
+    }
+
+    // Kiểm tra ca đã có nhân viên được phân công còn hiệu lực
+    public static Task<bool> CaDaCoPhanCongHieuLuc(
+        AppDbContext db, int maCaDichVu)
+    {
+        return db.PhanCongNhanVien.AnyAsync(pc =>
+            pc.MaCaDichVu == maCaDichVu
+            && pc.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc);
+    }
+
+    // Kiểm tra nhân viên có ca khác bị trùng thời gian
+    public static Task<bool> NhanVienBiTrungCa(
+        AppDbContext db,
+        int maNhanVien,
+        DateTime bd,
+        DateTime kt,
+        int boQuaMaCa = 0)
+    {
+        return (from pc in db.PhanCongNhanVien
+                join ca in db.CaDichVu
+                    on pc.MaCaDichVu equals ca.MaCaDichVu
+                where pc.MaNhanVien == maNhanVien
+                      && pc.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc
+                      && ca.MaCaDichVu != boQuaMaCa
+                      && ca.TrangThai != HangSo.TrangThaiCaDichVu.DaHuy
+                      && ca.ThoiGianBatDau < kt
+                      && bd < ca.ThoiGianKetThuc
+                select pc.MaPhanCong).AnyAsync();
+    }
+
 }

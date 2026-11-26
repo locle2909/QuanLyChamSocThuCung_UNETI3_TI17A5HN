@@ -1,0 +1,9 @@
+CAP NHAT MODULE 4 (nen: master commit 7f592c7)
+
+1) Truoc khi giai nen: git merge origin/master  (de cac file khop voi master moi nhat)
+2) Giai nen file zip nay DE LEN thu muc goc du an (noi co file .csproj), chon "Replace".
+3) dotnet build
+4) dotnet ef migrations add Module4LienKetLichHenVaNhatKy
+   -> kiem tra file migration chi co: cot MaLichHen (CaDichVu) + index co dieu kien + khoa ngoai,
+      cot GhiChuNoiBo va MaNguoiCapNhat (KetQuaDichVu), bang NhatKyKetQuaDichVu.
+5) dotnet ef database update

@@ -1,4 +1,3 @@
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -68,8 +67,7 @@ public class LichHenController : Controller
                     && x.lichHen.ThoiGianBatDau > now,
                 CoTheXacNhan = x.lichHen.TrangThai == HangSo.TrangThaiLichHen.ChoXacNhan
                     && x.lichHen.ThoiGianBatDau > now,
-                CoTheHoanThanh = x.lichHen.TrangThai == HangSo.TrangThaiLichHen.DaXacNhan
-                    && x.lichHen.ThoiGianKetThuc <= now
+                CoTheHoanThanh = false // lịch hẹn tự hoàn thành khi ca dịch vụ hoàn thành
             })
             .ToListAsync();
 
@@ -113,7 +111,7 @@ public class LichHenController : Controller
 
         var thuCung = await _context.ThuCungs
             .FirstOrDefaultAsync(x => x.MaThuCung == model.MaThuCung
-                && x.MaTaiKhoan == maTaiKhoan && x.MaTaiKhoan == maTaiKhoan
+                && x.MaTaiKhoan == maTaiKhoan
                 && x.TrangThai == "Hoạt động");
         if (thuCung == null)
             ModelState.AddModelError(nameof(model.MaThuCung), "Thú cưng không tồn tại, không thuộc tài khoản của bạn hoặc đã ngừng hoạt động.");
@@ -154,9 +152,6 @@ public class LichHenController : Controller
         });
         await _context.SaveChangesAsync();
         TempData["ThongBao"] = "Đã đặt lịch hẹn, vui lòng chờ xác nhận.";
-        return RedirectToAction(nameof(Index));
-        await _context.SaveChangesAsync();
-        TempData["ThongBao"] = "Đã xác nhận lịch hẹn.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -230,6 +225,21 @@ public class LichHenController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        // Lịch hẹn đã có ca dịch vụ: hủy luôn ca và các phân công còn hiệu lực
+        var caLienQuan = await _context.CaDichVu.FirstOrDefaultAsync(c =>
+            c.MaLichHen == id && c.TrangThai != HangSo.TrangThaiCaDichVu.DaHuy);
+        if (caLienQuan != null)
+        {
+            caLienQuan.TrangThai = HangSo.TrangThaiCaDichVu.DaHuy;
+
+            var phanCongs = await _context.PhanCongNhanVien
+                .Where(p => p.MaCaDichVu == caLienQuan.MaCaDichVu
+                            && p.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc)
+                .ToListAsync();
+            foreach (var p in phanCongs)
+                p.TrangThai = HangSo.TrangThaiPhanCong.DaHuy;
+        }
+
         lichHen.TrangThai = HangSo.TrangThaiLichHen.DaHuy;
         await _context.SaveChangesAsync();
         TempData["ThongBao"] = "Đã hủy lịch hẹn.";
@@ -238,25 +248,13 @@ public class LichHenController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> HoanThanh(int id)
+    public IActionResult HoanThanh(int id)
     {
         if (!IsNhanVienHoacAdmin())
             return Forbid();
 
-        var lichHen = await _context.LichHen.FindAsync(id);
-        if (lichHen == null)
-            return NotFound();
-
-        if (lichHen.TrangThai != HangSo.TrangThaiLichHen.DaXacNhan
-            || lichHen.ThoiGianKetThuc > DateTime.Now)
-        {
-            TempData["Loi"] = "Chỉ có thể hoàn tất lịch đã xác nhận sau khi kết thúc thời gian hẹn.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        lichHen.TrangThai = HangSo.TrangThaiLichHen.DaHoanThanh;
-        await _context.SaveChangesAsync();
-        TempData["ThongBao"] = "Đã cập nhật lịch hẹn hoàn thành.";
+        // Lịch hẹn chỉ hoàn thành thông qua ca dịch vụ
+        TempData["Loi"] = "Lịch hẹn tự hoàn thành khi ca dịch vụ hoàn thành. Hãy tạo ca từ lịch hẹn rồi hoàn thành ca.";
         return RedirectToAction(nameof(Index));
     }
 

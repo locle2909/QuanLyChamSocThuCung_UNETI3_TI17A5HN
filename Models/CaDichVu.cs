@@ -21,6 +21,9 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models
         public string? GhiChu { get; set; }
 
         public string TrangThai { get; set; } = "Đã lên lịch";
+
+        // Lịch hẹn mà ca này phục vụ (null với ca tạo trước khi có liên kết)
+        public int? MaLichHen { get; set; }
     }
 }
 

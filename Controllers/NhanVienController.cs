@@ -169,6 +169,21 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 
             await KiemTraTaiKhoan(model, id);
 
+            // Nhân viên còn phân công hiệu lực: không được ngừng hoạt động hay đổi/gỡ tài khoản,
+            // nếu không ca sẽ không còn ai thực hiện được
+            bool conPhanCong = await _context.PhanCongNhanVien.AnyAsync(p =>
+                p.MaNhanVien == id && p.TrangThai == HangSo.TrangThaiPhanCong.HieuLuc);
+            if (conPhanCong)
+            {
+                if (!model.TrangThai)
+                    ModelState.AddModelError(string.Empty,
+                        "Nhân viên còn phân công hiệu lực. Hãy hủy hoặc hoàn thành các phân công trước khi ngừng hoạt động.");
+
+                if (model.MaTaiKhoan != nhanVien.MaTaiKhoan)
+                    ModelState.AddModelError(string.Empty,
+                        "Nhân viên còn phân công hiệu lực, không thể đổi hoặc gỡ tài khoản liên kết.");
+            }
+
             var hienCo = await _context.ChuyenMonNhanVien.Where(x => x.MaNhanVien == id).ToListAsync();
             var biBo = hienCo.Where(x => !chuyenMons.Contains(x.TenChuyenMon)).ToList();
 
