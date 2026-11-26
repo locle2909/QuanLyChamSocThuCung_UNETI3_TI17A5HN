@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
 @model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
 
 @{
@@ -29,6 +29,38 @@
     <a asp-controller="CaDichVu" asp-action="Index" class="btn btn-secondary">Ca dịch vụ</a>
 </p>
 
+<form method="get" asp-action="Index" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control"
+                   placeholder="Mã kết quả, mã ca, khách hàng, dịch vụ, thú cưng..." />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Trạng thái kết quả</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Chờ thực hiện" selected="@((string?)ViewBag.TrangThai == "Chờ thực hiện")">Chờ thực hiện</option>
+                <option value="Đang thực hiện" selected="@((string?)ViewBag.TrangThai == "Đang thực hiện")">Đang thực hiện</option>
+                <option value="Chờ khách xác nhận" selected="@((string?)ViewBag.TrangThai == "Chờ khách xác nhận")">Chờ khách xác nhận</option>
+                <option value="Hoàn thành" selected="@((string?)ViewBag.TrangThai == "Hoàn thành")">Hoàn thành</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control" />
+        </div>
+        <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary">Tìm</button>
+        </div>
+    </div>
+    <div class="mt-2"><a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại bộ lọc</a></div>
+</form>
+
 <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle">
         <thead>
@@ -49,6 +81,10 @@
             </tr>
         </thead>
         <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="13" class="text-center text-muted">Không tìm thấy kết quả dịch vụ phù hợp.</td></tr>
+            }
             @foreach (var kq in Model)
             {
                 <tr>

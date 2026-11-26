@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Http
 @model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Models.CaDichVu>
 
 @{
@@ -36,6 +36,37 @@
     <a asp-controller="KetQuaDichVu" asp-action="Index" class="btn btn-secondary">Kết quả dịch vụ</a>
 </p>
 
+<form method="get" asp-action="Index" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control"
+                   placeholder="Mã ca, mã lịch hẹn, khách hàng, dịch vụ, thú cưng..." />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Trạng thái</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đã lên lịch" selected="@((string?)ViewBag.TrangThai == "Đã lên lịch")">Đã lên lịch</option>
+                <option value="Đã hoàn thành" selected="@((string?)ViewBag.TrangThai == "Đã hoàn thành")">Đã hoàn thành</option>
+                <option value="Đã hủy" selected="@((string?)ViewBag.TrangThai == "Đã hủy")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Đặt lại</a>
+        </div>
+    </div>
+</form>
+
 <table class="table table-bordered table-striped align-middle">
     <thead>
         <tr>
@@ -52,6 +83,10 @@
         </tr>
     </thead>
     <tbody>
+    @if (!Model.Any())
+    {
+        <tr><td colspan="10" class="text-center text-muted">Không tìm thấy ca dịch vụ phù hợp.</td></tr>
+    }
     @foreach (var ca in Model)
     {
         <tr>

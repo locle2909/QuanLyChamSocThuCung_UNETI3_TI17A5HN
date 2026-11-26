@@ -1,4 +1,4 @@
-﻿@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
+@model IEnumerable<QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers.KetQuaHienThi>
 
 @{
     ViewData["Title"] = "Kết quả dịch vụ của tôi";
@@ -15,9 +15,41 @@
     <div class="alert alert-warning">@TempData["Loi"]</div>
 }
 
+<form method="get" asp-action="Index" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control"
+                   placeholder="Mã kết quả, mã ca, dịch vụ, thú cưng..." />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Trạng thái</label>
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Chờ thực hiện" selected="@((string?)ViewBag.TrangThai == "Chờ thực hiện")">Chờ thực hiện</option>
+                <option value="Đang thực hiện" selected="@((string?)ViewBag.TrangThai == "Đang thực hiện")">Đang thực hiện</option>
+                <option value="Chờ khách xác nhận" selected="@((string?)ViewBag.TrangThai == "Chờ khách xác nhận")">Chờ khách xác nhận</option>
+                <option value="Hoàn thành" selected="@((string?)ViewBag.TrangThai == "Hoàn thành")">Hoàn thành</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control" />
+        </div>
+        <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary">Tìm</button>
+        </div>
+    </div>
+    <div class="mt-2"><a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại bộ lọc</a></div>
+</form>
+
 @if (!Model.Any())
 {
-    <div class="alert alert-info">Bạn chưa có kết quả dịch vụ nào.</div>
+    <div class="alert alert-info">Không tìm thấy kết quả dịch vụ phù hợp.</div>
 }
 else
 {

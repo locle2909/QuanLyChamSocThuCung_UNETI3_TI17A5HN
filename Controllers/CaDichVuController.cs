@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
@@ -18,8 +18,14 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? tuKhoa, string? trangThai, DateTime? tuNgay, DateTime? denNgay)
         {
+            ViewBag.TuKhoa = tuKhoa;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
+
             ViewBag.DsTenDichVu = await _context.DichVus.AsNoTracking()
                 .ToDictionaryAsync(x => x.MaDichVu, x => x.TenDichVu);
             ViewBag.DsTenThuCung = await _context.ThuCungs.AsNoTracking()
@@ -35,6 +41,31 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 truyVan = truyVan.Where(c => caCuaToi.Contains(c.MaCaDichVu));
                 ViewBag.ChuaLienKet = !await _context.CoHoSoNhanVienHopLe(maTk);
             }
+
+            if (!string.IsNullOrWhiteSpace(tuKhoa))
+            {
+                var kw = tuKhoa.Trim();
+                var maLichHenTheoKhach = _context.LichHen
+                    .Where(l => _context.TaiKhoan.Any(t => t.MaTaiKhoan == l.MaTaiKhoan && t.HoTen.Contains(kw)))
+                    .Select(l => l.MaLichHen);
+                var maDichVuTheoTen = _context.DichVus
+                    .Where(d => d.TenDichVu.Contains(kw)).Select(d => d.MaDichVu);
+                var maThuCungTheoTen = _context.ThuCungs
+                    .Where(t => t.HoTen.Contains(kw)).Select(t => t.MaThuCung);
+                var coMa = int.TryParse(kw, out var ma);
+                truyVan = truyVan.Where(c =>
+                    (coMa && (c.MaCaDichVu == ma || c.MaLichHen == ma))
+                    || maDichVuTheoTen.Contains(c.MaDichVu)
+                    || maThuCungTheoTen.Contains(c.MaThuCung)
+                    || (c.MaLichHen != null && maLichHenTheoKhach.Contains(c.MaLichHen.Value)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trangThai))
+                truyVan = truyVan.Where(c => c.TrangThai == trangThai);
+            if (tuNgay.HasValue)
+                truyVan = truyVan.Where(c => c.ThoiGianBatDau >= tuNgay.Value.Date);
+            if (denNgay.HasValue)
+                truyVan = truyVan.Where(c => c.ThoiGianBatDau < denNgay.Value.Date.AddDays(1));
 
             var danhSach = await truyVan.OrderByDescending(x => x.ThoiGianBatDau).ToListAsync();
 

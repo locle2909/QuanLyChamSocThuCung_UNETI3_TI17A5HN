@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
@@ -46,8 +46,12 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 
         // ===== Danh sách =====
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? tuKhoa, string? trangThai, DateTime? tuNgay, DateTime? denNgay)
         {
+            ViewBag.TuKhoa = tuKhoa;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
             var laAdmin = LaAdmin;
 
             var query = from kq in _context.KetQuaDichVu.AsNoTracking()
@@ -60,6 +64,24 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 query = query.Where(x => caCuaToi.Contains(x.ca.MaCaDichVu));
                 ViewBag.ChuaLienKet = !await _context.CoHoSoNhanVienHopLe(MaTaiKhoanHienTai);
             }
+
+            if (!string.IsNullOrWhiteSpace(tuKhoa))
+            {
+                var kw = tuKhoa.Trim();
+                var coMa = int.TryParse(kw, out var ma);
+                query = query.Where(x =>
+                    (coMa && (x.kq.MaKetQuaDichVu == ma || x.ca.MaCaDichVu == ma))
+                    || _context.TaiKhoan.Any(t => t.MaTaiKhoan == x.kq.MaKhachHang && t.HoTen.Contains(kw))
+                    || _context.DichVus.Any(d => d.MaDichVu == x.ca.MaDichVu && d.TenDichVu.Contains(kw))
+                    || _context.ThuCungs.Any(t => t.MaThuCung == x.ca.MaThuCung && t.HoTen.Contains(kw)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trangThai))
+                query = query.Where(x => x.kq.TrangThaiKetQuaDichVu == trangThai);
+            if (tuNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau >= tuNgay.Value.Date);
+            if (denNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau < denNgay.Value.Date.AddDays(1));
 
             var rows = await query.OrderByDescending(x => x.kq.ThoiGianGhiNhan).ToListAsync();
 

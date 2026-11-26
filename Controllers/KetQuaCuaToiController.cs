@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
@@ -34,19 +34,41 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
 
         // ===== Danh sách kết quả của khách hàng =====
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? tuKhoa, string? trangThai, DateTime? tuNgay, DateTime? denNgay)
         {
+            ViewBag.TuKhoa = tuKhoa;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
             var maTk = HttpContext.LayMaTaiKhoan();
 
             if (!await TaiKhoanHopLe(maTk))
                 return RedirectToAction("KhongCoQuyen", "TaiKhoan");
 
-            var rows = await (
+            var query =
                 from kq in _context.KetQuaDichVu.AsNoTracking()
                 join ca in _context.CaDichVu.AsNoTracking() on kq.MaCaDichVu equals ca.MaCaDichVu
                 where kq.MaKhachHang == maTk
-                orderby ca.ThoiGianBatDau descending
-                select new { kq, ca }).ToListAsync();
+                select new { kq, ca };
+
+            if (!string.IsNullOrWhiteSpace(tuKhoa))
+            {
+                var kw = tuKhoa.Trim();
+                var coMa = int.TryParse(kw, out var ma);
+                query = query.Where(x =>
+                    (coMa && (x.kq.MaKetQuaDichVu == ma || x.ca.MaCaDichVu == ma))
+                    || _context.DichVus.Any(d => d.MaDichVu == x.ca.MaDichVu && d.TenDichVu.Contains(kw))
+                    || _context.ThuCungs.Any(t => t.MaThuCung == x.ca.MaThuCung && t.HoTen.Contains(kw)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trangThai))
+                query = query.Where(x => x.kq.TrangThaiKetQuaDichVu == trangThai);
+            if (tuNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau >= tuNgay.Value.Date);
+            if (denNgay.HasValue)
+                query = query.Where(x => x.ca.ThoiGianBatDau < denNgay.Value.Date.AddDays(1));
+
+            var rows = await query.OrderByDescending(x => x.ca.ThoiGianBatDau).ToListAsync();
 
             var tenDv = await _context.DichVus.AsNoTracking()
                 .ToDictionaryAsync(x => x.MaDichVu, x => x.TenDichVu);

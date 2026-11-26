@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Data;
 using QuanLyChamSocThuCung_UNETI3_TI17A5HN.Filters;
@@ -18,8 +18,12 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
         }
 
         // 1. Hiển thị danh sách phân công
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? tuKhoa, string? trangThai, DateTime? tuNgay, DateTime? denNgay)
         {
+            ViewBag.TuKhoa = tuKhoa;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgay = denNgay?.ToString("yyyy-MM-dd");
             var truyVan =
                 from pc in _context.PhanCongNhanVien
                 join nv in _context.NhanVien on pc.MaNhanVien equals nv.MaNhanVien
@@ -54,7 +58,23 @@ namespace QuanLyChamSocThuCung_UNETI3_TI17A5HN.Controllers
                 truyVan = truyVan.Where(x => x.MaNhanVien == maNhanVien);
             }
 
-            return View(await truyVan.ToListAsync());
+            if (!string.IsNullOrWhiteSpace(tuKhoa))
+            {
+                var kw = tuKhoa.Trim();
+                var coMa = int.TryParse(kw, out var ma);
+                truyVan = truyVan.Where(x =>
+                    x.HoTenNhanVien.Contains(kw)
+                    || (coMa && (x.MaNhanVien == ma || x.MaCaDichVu == ma || x.MaPhanCong == ma)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trangThai))
+                truyVan = truyVan.Where(x => x.TrangThai == trangThai);
+            if (tuNgay.HasValue)
+                truyVan = truyVan.Where(x => x.ThoiGianBatDau >= tuNgay.Value.Date);
+            if (denNgay.HasValue)
+                truyVan = truyVan.Where(x => x.ThoiGianBatDau < denNgay.Value.Date.AddDays(1));
+
+            return View(await truyVan.OrderByDescending(x => x.ThoiGianBatDau).ToListAsync());
         }
 
         // 2. Hiển thị giao diện tạo phân công
